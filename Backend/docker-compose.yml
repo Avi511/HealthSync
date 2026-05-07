@@ -1,0 +1,126 @@
+services:
+  discovery-server:
+    build:
+      context: .
+      args:
+        MODULE: discovery-server
+    container_name: healthsync-discovery-server
+    ports:
+      - "8761:8761"
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        MODULE: api-gateway
+    container_name: healthsync-api-gateway
+    depends_on:
+      - discovery-server
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  auth-service:
+    build:
+      context: .
+      args:
+        MODULE: auth-service
+    container_name: healthsync-auth-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  user-service:
+    build:
+      context: .
+      args:
+        MODULE: user-service
+    container_name: healthsync-user-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  doctor-service:
+    build:
+      context: .
+      args:
+        MODULE: doctor-service
+    container_name: healthsync-doctor-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8083:8083"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  appointment-service:
+    build:
+      context: .
+      args:
+        MODULE: appointment-service
+    container_name: healthsync-appointment-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8084:8084"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  prescription-service:
+    build:
+      context: .
+      args:
+        MODULE: prescription-service
+    container_name: healthsync-prescription-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8085:8085"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  payment-service:
+    build:
+      context: .
+      args:
+        MODULE: payment-service
+    container_name: healthsync-payment-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8086:8086"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  notification-service:
+    build:
+      context: .
+      args:
+        MODULE: notification-service
+    container_name: healthsync-notification-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8087:8087"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+
+  review-service:
+    build:
+      context: .
+      args:
+        MODULE: review-service
+    container_name: healthsync-review-service
+    depends_on:
+      - discovery-server
+    ports:
+      - "8088:8088"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
