@@ -24,6 +24,6 @@ public class UserRequest {
     private String phone;
 
     @NotBlank
-    private String role;
+    private String address;
     
 }
