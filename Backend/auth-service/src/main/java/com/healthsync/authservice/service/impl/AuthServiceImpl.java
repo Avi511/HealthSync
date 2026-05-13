@@ -7,17 +7,21 @@ import com.healthsync.authservice.dto.RegisterRequest;
 import com.healthsync.authservice.entity.AuthUser;
 import com.healthsync.authservice.repository.AuthRepository;
 import com.healthsync.authservice.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+
+    public AuthServiceImpl(AuthRepository authRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.authRepository = authRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
     @Override
     public AuthResponse register(RegisterRequest request) {
