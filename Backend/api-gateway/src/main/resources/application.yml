@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        - id: user-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/**
+
+        - id: doctor-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/doctors/**
+
+        - id: appointment-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/appointments/**
+
+        - id: notification-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/notifications/**
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
