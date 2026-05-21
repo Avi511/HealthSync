@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-
 const sections = [
   {
     id: 'agreement',
@@ -51,46 +49,13 @@ const sections = [
 ];
 
 export default function TermsOfService() {
-  const [activeSection, setActiveSection] = useState('agreement');
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 200;
-      for (const section of sections) {
-        const element = document.getElementById(section.id);
-        if (element) {
-          const top = element.offsetTop;
-          const height = element.offsetHeight;
-          if (scrollPosition >= top && scrollPosition < top + height) {
-            setActiveSection(section.id);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      window.scrollTo({
-        top: element.offsetTop - 120,
-        behavior: 'smooth'
-      });
-      setActiveSection(id);
-    }
-  };
-
   return (
     <div className="relative min-h-screen bg-white pt-24 pb-20 overflow-hidden font-sans">
       {/* Background Decorative Blur Blobs */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
       <div className="absolute bottom-10 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Header */}
         <div className="text-center space-y-4 mb-16">
           <div className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-3.5 py-1.5 rounded-full">
@@ -109,66 +74,22 @@ export default function TermsOfService() {
           </p>
         </div>
 
-        {/* Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-          {/* Side Navigation (Desktop only) */}
-          <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-28 space-y-2.5">
-              <h3 className="text-xs font-bold text-black uppercase tracking-wider mb-4 px-2">
-                Sections
-              </h3>
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => scrollToSection(section.id)}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
-                    activeSection === section.id
-                      ? 'bg-primary/10 text-primary shadow-sm border-l-4 border-primary'
-                      : 'hover:bg-gray-50 text-gray-500 hover:text-black border-l-4 border-transparent'
-                  }`}
-                >
-                  {section.title}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Document Content */}
-          <div className="col-span-1 lg:col-span-3 space-y-12">
-            {/* Mobile Navigation Dropdown */}
-            <div className="lg:hidden bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-8">
-              <label htmlFor="section-select" className="block text-xs font-semibold text-gray-500 mb-2">
-                Navigate to section:
-              </label>
-              <select
-                id="section-select"
-                value={activeSection}
-                onChange={(e) => scrollToSection(e.target.value)}
-                className="w-full bg-white text-xs border border-gray-200 px-4 py-2.5 rounded-xl outline-none text-black focus:border-primary"
-              >
-                {sections.map((section) => (
-                  <option key={section.id} value={section.id}>
-                    {section.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {sections.map((section) => (
-              <section
-                key={section.id}
-                id={section.id}
-                className="border-b border-gray-100 pb-10 last:border-b-0"
-              >
-                <h2 className="text-xl font-bold text-black mb-4 tracking-tight">
-                  {section.title}
-                </h2>
-                <div className="text-sm text-gray-600 font-light leading-relaxed whitespace-pre-line space-y-4">
-                  {section.content}
-                </div>
-              </section>
-            ))}
-          </div>
+        {/* Document Content */}
+        <div className="space-y-12">
+          {sections.map((section) => (
+            <section
+              key={section.id}
+              id={section.id}
+              className="border-b border-gray-100 pb-10 last:border-b-0"
+            >
+              <h2 className="text-xl font-bold text-black mb-4 tracking-tight">
+                {section.title}
+              </h2>
+              <div className="text-sm text-gray-600 font-light leading-relaxed whitespace-pre-line space-y-4">
+                {section.content}
+              </div>
+            </section>
+          ))}
         </div>
       </div>
     </div>
