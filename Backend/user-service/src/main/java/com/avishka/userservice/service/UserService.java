@@ -1,5 +1,6 @@
 package com.avishka.userservice.service;
 
+import com.avishka.userservice.dto.LoginRequest;
 import com.avishka.userservice.dto.UserRequest;
 import com.avishka.userservice.dto.UserResponse;
 
@@ -16,5 +17,7 @@ public interface UserService {
     UserResponse updateUser(Long id, UserRequest userRequest);
 
     void deleteUser(Long id);
+
+    UserResponse login(LoginRequest loginRequest);
 
 }

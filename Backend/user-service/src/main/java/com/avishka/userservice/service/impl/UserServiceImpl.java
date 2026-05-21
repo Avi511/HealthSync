@@ -1,5 +1,6 @@
 package com.avishka.userservice.service.impl;
 
+import com.avishka.userservice.dto.LoginRequest;
 import com.avishka.userservice.dto.UserRequest;
 import com.avishka.userservice.dto.UserResponse;
 import com.avishka.userservice.entity.User;
@@ -20,10 +21,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(UserRequest request) {
-
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
         User user = UserMapper.toEntity(request);
         User savedUser = userRepository.save(user);
         return UserMapper.toResponse(savedUser);
+    }
+
+    @Override
+    public UserResponse login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+
+        if (!user.getPassword().equals(loginRequest.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        return UserMapper.toResponse(user);
     }
 
     @Override

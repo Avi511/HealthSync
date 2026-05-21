@@ -6,6 +6,7 @@ The User Service handles user registrations, user records management, and profil
 
 ## ⚙️ Features
 * **User Profile Creation:** Handles registration requests with secure password stubbing.
+* **User Login Validation:** Verifies user credentials (email and password) to authenticate active sessions.
 * **Input Validation:** Enforces requirements for matching email structures, non-blank strings, and robust inputs.
 * **Hibernate JPA Persistence:** Integrates with the database layer using dynamic query generation.
 
@@ -24,6 +25,7 @@ The User Service handles user registrations, user records management, and profil
 | Method | Endpoint | Description | Payload (Request) |
 | :--- | :--- | :--- | :--- |
 | **POST** | `/api/users` | Register a new user profile | JSON containing fields: `firstName`, `lastName`, `email`, `password`, `phone`, `address` |
+| **POST** | `/api/users/login` | Authenticate and log in a user | JSON containing fields: `email`, `password` |
 | **GET** | `/api/users` | Fetch list of all registered users | None |
 | **GET** | `/api/users/{id}`| Fetch a single user profile | ID Path Parameter |
 | **PUT** | `/api/users/{id}`| Update user details | JSON with updated fields |

@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const { showInfo } = useToast();
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -83,14 +87,31 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="hidden min-[920px]:flex items-center min-[920px]:space-x-2 lg:space-x-4">
-            <Link to="/login" className="min-[920px]:text-xs lg:text-sm font-semibold text-black hover:text-primary transition-colors duration-200 min-[920px]:px-2.5 min-[920px]:py-1.5 lg:px-4 lg:py-2 whitespace-nowrap">
-              Sign In
-            </Link>
-            <Link to="/register" className="min-[920px]:text-xs lg:text-sm font-semibold text-white bg-primary hover:bg-primary-dark transition-all duration-200 min-[920px]:px-4 min-[920px]:py-2 lg:px-6 lg:py-2.5 rounded-full shadow-sm hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap">
-              Get Started
-            </Link>
-          </div>
+          {isAuthenticated ? (
+            <div className="hidden min-[920px]:flex items-center min-[920px]:space-x-3 lg:space-x-4">
+              <span className="min-[920px]:text-xs lg:text-sm font-medium text-gray-700 whitespace-nowrap">
+                Hi, <span className="font-semibold text-primary">{user?.firstName || 'User'}</span>
+              </span>
+              <button
+                onClick={() => {
+                  logout();
+                  showInfo('Logged out successfully.');
+                }}
+                className="min-[920px]:text-xs lg:text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-all duration-200 min-[920px]:px-4 min-[920px]:py-2 lg:px-6 lg:py-2.5 rounded-full shadow-sm hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="hidden min-[920px]:flex items-center min-[920px]:space-x-2 lg:space-x-4">
+              <Link to="/login" className="min-[920px]:text-xs lg:text-sm font-semibold text-black hover:text-primary transition-colors duration-200 min-[920px]:px-2.5 min-[920px]:py-1.5 lg:px-4 lg:py-2 whitespace-nowrap">
+                Sign In
+              </Link>
+              <Link to="/register" className="min-[920px]:text-xs lg:text-sm font-semibold text-white bg-primary hover:bg-primary-dark transition-all duration-200 min-[920px]:px-4 min-[920px]:py-2 lg:px-6 lg:py-2.5 rounded-full shadow-sm hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap">
+                Get Started
+              </Link>
+            </div>
+          )}
 
           <div className="min-[920px]:hidden flex items-center">
             <button
@@ -131,20 +152,40 @@ export default function Navbar() {
               </NavLink>
             ))}
             <div className="pt-4 pb-2 border-t border-gray-100 px-4 flex flex-col space-y-2.5">
-              <Link
-                to="/login"
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center text-base font-semibold text-black hover:text-primary transition-colors duration-200 py-3 rounded-full border border-gray-200"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center text-base font-semibold text-white bg-primary hover:bg-primary-dark transition-colors duration-200 py-3 rounded-full shadow-sm"
-              >
-                Get Started
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <div className="text-center text-sm font-medium text-gray-700 py-1">
+                    Hi, <span className="font-semibold text-primary">{user?.firstName || 'User'}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      showInfo('Logged out successfully.');
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-center text-base font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors duration-200 py-3 rounded-full shadow-sm cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center text-base font-semibold text-black hover:text-primary transition-colors duration-200 py-3 rounded-full border border-gray-200"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center text-base font-semibold text-white bg-primary hover:bg-primary-dark transition-colors duration-200 py-3 rounded-full shadow-sm"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

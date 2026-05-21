@@ -1,5 +1,6 @@
 package com.avishka.userservice.controller;
 
+import com.avishka.userservice.dto.LoginRequest;
 import com.avishka.userservice.dto.UserRequest;
 import com.avishka.userservice.dto.UserResponse;
 import com.avishka.userservice.service.UserService;
@@ -26,6 +27,13 @@ public class UserController {
                 userService.createUser(request),
                 HttpStatus.CREATED
         );
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponse> loginUser(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        return ResponseEntity.ok(userService.login(request));
     }
 
     @GetMapping

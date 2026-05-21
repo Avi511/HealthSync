@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -12,33 +16,56 @@ export default function Register() {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { register } = useAuth();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !phone || !address || !password || !confirmPassword) {
       setError('Please fill in all fields.');
+      showError('Please fill in all fields.');
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
+      showError('Passwords do not match.');
       return;
     }
 
     if (!agreeToTerms) {
       setError('You must agree to the Terms of Service and Privacy Policy.');
+      showError('You must agree to the Terms of Service and Privacy Policy.');
       return;
     }
 
     setIsLoading(true);
-    // Mock registration
-    setTimeout(() => {
+
+    const nameParts = name.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || 'User';
+
+    try {
+      await register({
+        firstName,
+        lastName,
+        email,
+        phone,
+        address,
+        password,
+      });
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+      showSuccess('Account registered successfully! Please sign in.');
+      navigate('/login', { state: { successMessage: 'Account registered successfully! Please sign in.' } });
+    } catch (err) {
+      setIsLoading(false);
+      setError(err);
+      showError(err || 'Registration failed. Please try again.');
+    }
   };
 
   return (
@@ -106,6 +133,51 @@ export default function Register() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
+                    className="w-full bg-white text-sm border border-gray-200 pl-11 pr-4 py-3.5 rounded-2xl outline-none text-black transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Phone Number */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-700 tracking-wide block">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1 (555) 000-0000"
+                    className="w-full bg-white text-sm border border-gray-200 pl-11 pr-4 py-3.5 rounded-2xl outline-none text-black transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Address */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-700 tracking-wide block">
+                  Address
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="123 Main St, New York, NY"
                     className="w-full bg-white text-sm border border-gray-200 pl-11 pr-4 py-3.5 rounded-2xl outline-none text-black transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
                     required
                   />

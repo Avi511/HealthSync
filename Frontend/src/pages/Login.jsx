@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,23 +11,43 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const { login } = useAuth();
+  const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const successMessage = location.state?.successMessage;
+
+  useEffect(() => {
+    if (successMessage) {
+      showSuccess(successMessage);
+      // Clear location state to avoid showing toast repeatedly on reload
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [successMessage, showSuccess, navigate, location.pathname]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!email || !password) {
       setError('Please fill in all fields.');
+      showError('Please fill in all fields.');
       return;
     }
 
     setIsLoading(true);
-    // Mock authentication
-    setTimeout(() => {
+    try {
+      const userData = await login(email, password);
       setIsLoading(false);
+      showSuccess(`Welcome back, ${userData?.firstName || 'User'}! Successfully signed in.`);
       navigate('/dashboard');
-    }, 1500);
+    } catch (err) {
+      setIsLoading(false);
+      setError(err);
+      showError(err || 'Failed to sign in.');
+    }
   };
 
   return (
@@ -67,6 +89,15 @@ export default function Login() {
 
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {successMessage && !error && (
+              <div className="bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center space-x-2">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{successMessage}</span>
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center space-x-2">
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
