@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 const categories = [
@@ -73,23 +72,6 @@ const faqs = [
   }
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
-  }
-};
-
 export default function MedicalFAQ() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -115,41 +97,21 @@ export default function MedicalFAQ() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Header */}
         <div className="text-center space-y-4 mb-12">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-3.5 py-1.5 rounded-full"
-          >
+          <div className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-3.5 py-1.5 rounded-full">
             <span className="text-xs font-semibold text-primary tracking-wide uppercase">
               Help Center
             </span>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-extrabold text-black tracking-tight leading-tight"
-          >
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-black tracking-tight leading-tight">
             Medical & Platform <span className="text-primary">FAQ</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto font-light leading-relaxed"
-          >
+          </h1>
+          <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto font-light leading-relaxed">
             Find answers to common questions about consulting, scheduling, insurance pre-auth, and platform encryption.
-          </motion.p>
+          </p>
         </div>
 
         {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="relative max-w-xl mx-auto mb-10"
-        >
+        <div className="relative max-w-xl mx-auto mb-10">
           <input
             type="text"
             placeholder="Search questions or keywords..."
@@ -165,15 +127,10 @@ export default function MedicalFAQ() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-        </motion.div>
+        </div>
 
         {/* Category Pills */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="flex flex-wrap items-center justify-center gap-2.5 mb-12 border-b border-gray-100 pb-8"
-        >
+        <div className="flex flex-wrap items-center justify-center gap-2.5 mb-12 border-b border-gray-100 pb-8">
           {categories.map((category) => (
             <button
               key={category.id}
@@ -190,97 +147,69 @@ export default function MedicalFAQ() {
               {category.name}
             </button>
           ))}
-        </motion.div>
+        </div>
 
         {/* FAQ Accordions List */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-4"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredFaqs.length > 0 ? (
-              filteredFaqs.map((faq, index) => {
-                const isOpen = openIndex === index;
-                return (
-                  <motion.div
-                    key={faq.question}
-                    variants={itemVariants}
-                    layout
-                    className={`border rounded-3xl overflow-hidden transition-all duration-300 ${
-                      isOpen
-                        ? 'border-primary/40 bg-primary-light/10 shadow-md shadow-primary/5'
-                        : 'border-gray-100 bg-white hover:border-gray-200'
-                    }`}
+        <div className="space-y-4">
+          {filteredFaqs.length > 0 ? (
+            filteredFaqs.map((faq, index) => {
+              const isOpen = openIndex === index;
+              return (
+                <div
+                  key={faq.question}
+                  className={`border rounded-3xl overflow-hidden transition-all duration-300 ${
+                    isOpen
+                      ? 'border-primary/40 bg-primary-light/10 shadow-md shadow-primary/5'
+                      : 'border-gray-100 bg-white hover:border-gray-200'
+                  }`}
+                >
+                  <button
+                    onClick={() => handleToggle(index)}
+                    className="w-full flex items-center justify-between p-6 text-left outline-none cursor-pointer group"
                   >
-                    <button
-                      onClick={() => handleToggle(index)}
-                      className="w-full flex items-center justify-between p-6 text-left outline-none cursor-pointer group"
+                    <span className={`text-base font-bold transition-colors duration-200 ${
+                      isOpen ? 'text-primary' : 'text-black group-hover:text-primary'
+                    }`}>
+                      {faq.question}
+                    </span>
+                    <div
+                      className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
+                        isOpen
+                          ? 'bg-primary text-white rotate-180'
+                          : 'bg-gray-50 text-gray-400 group-hover:bg-primary-light group-hover:text-primary'
+                      }`}
                     >
-                      <span className={`text-base font-bold transition-colors duration-200 ${
-                        isOpen ? 'text-primary' : 'text-black group-hover:text-primary'
-                      }`}>
-                        {faq.question}
-                      </span>
-                      <motion.div
-                        animate={{ rotate: isOpen ? 180 : 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-200 ${
-                          isOpen ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-primary-light group-hover:text-primary'
-                        }`}
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </motion.div>
-                    </button>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </button>
 
-                    <AnimatePresence initial={false}>
-                      {isOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                        >
-                          <div className="px-6 pb-6 text-sm text-gray-600 font-light leading-relaxed border-t border-gray-100/50 pt-4">
-                            {faq.answer}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                );
-              })
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16 bg-gray-50/50 border border-gray-100 rounded-3xl space-y-3"
-              >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-primary">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  {isOpen && (
+                    <div className="px-6 pb-6 text-sm text-gray-600 font-light leading-relaxed border-t border-gray-100/50 pt-4">
+                      {faq.answer}
+                    </div>
+                  )}
                 </div>
-                <h4 className="text-base font-bold text-black">No questions found</h4>
-                <p className="text-xs text-gray-500 font-light max-w-xs mx-auto">
-                  Try refining your search terms or selecting another category filter.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+              );
+            })
+          ) : (
+            <div className="text-center py-16 bg-gray-50/50 border border-gray-100 rounded-3xl space-y-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-primary">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h4 className="text-base font-bold text-black">No questions found</h4>
+              <p className="text-xs text-gray-500 font-light max-w-xs mx-auto">
+                Try refining your search terms or selecting another category filter.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* CTA Bottom Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mt-16 text-center bg-gray-50/60 border border-gray-100 rounded-3xl p-8 sm:p-10 space-y-6"
-        >
+        <div className="mt-16 text-center bg-gray-50/60 border border-gray-100 rounded-3xl p-8 sm:p-10 space-y-6">
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-black">Still have unanswered questions?</h3>
             <p className="text-sm text-gray-500 font-light max-w-md mx-auto">
@@ -296,7 +225,7 @@ export default function MedicalFAQ() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </Link>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

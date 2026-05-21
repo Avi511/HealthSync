@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 
 const sections = [
   {
@@ -94,40 +93,20 @@ export default function TermsOfService() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Header */}
         <div className="text-center space-y-4 mb-16">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-3.5 py-1.5 rounded-full"
-          >
+          <div className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-3.5 py-1.5 rounded-full">
             <span className="text-xs font-semibold text-primary tracking-wide uppercase">
               Legal Center
             </span>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-extrabold text-black tracking-tight leading-tight"
-          >
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-black tracking-tight leading-tight">
             Terms of <span className="text-primary">Service</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto font-light leading-relaxed"
-          >
+          </h1>
+          <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto font-light leading-relaxed">
             Please read these terms carefully before scheduling appointments or participating in telehealth consultations.
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-xs text-gray-400 font-light"
-          >
+          </p>
+          <p className="text-xs text-gray-400 font-light">
             Last updated: May 2026
-          </motion.p>
+          </p>
         </div>
 
         {/* Layout Grid */}
@@ -176,13 +155,9 @@ export default function TermsOfService() {
             </div>
 
             {sections.map((section) => (
-              <motion.section
+              <section
                 key={section.id}
                 id={section.id}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-100px' }}
-                transition={{ duration: 0.5 }}
                 className="border-b border-gray-100 pb-10 last:border-b-0"
               >
                 <h2 className="text-xl font-bold text-black mb-4 tracking-tight">
@@ -191,7 +166,7 @@ export default function TermsOfService() {
                 <div className="text-sm text-gray-600 font-light leading-relaxed whitespace-pre-line space-y-4">
                   {section.content}
                 </div>
-              </motion.section>
+              </section>
             ))}
           </div>
         </div>
