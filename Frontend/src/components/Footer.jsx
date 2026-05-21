@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
@@ -86,10 +85,10 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-500 hover:text-primary transition-colors duration-200 font-light">Medical FAQ</a>
+                <Link to="/medical-faq" className="text-gray-500 hover:text-primary transition-colors duration-200 font-light">Medical FAQ</Link>
               </li>
               <li>
-                <a href="#" className="text-gray-500 hover:text-primary transition-colors duration-200 font-light">Help Desk Support</a>
+                <Link to="/help-desk" className="text-gray-500 hover:text-primary transition-colors duration-200 font-light">Help Desk Support</Link>
               </li>
             </ul>
           </div>
@@ -117,9 +116,9 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} HealthSync. All rights reserved.
           </div>
           <div className="flex space-x-6">
-            <a href="#" className="hover:text-primary transition-colors duration-150">Privacy Policy</a>
-            <a href="#" className="hover:text-primary transition-colors duration-150">Terms of Service</a>
-            <a href="#" className="hover:text-primary transition-colors duration-150">Cookie Settings</a>
+            <Link to="/privacy" className="hover:text-primary transition-colors duration-150">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-primary transition-colors duration-150">Terms of Service</Link>
+            <Link to="/cookies" className="hover:text-primary transition-colors duration-150">Cookie Settings</Link>
           </div>
         </div>
       </div>
