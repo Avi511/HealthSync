@@ -14,7 +14,7 @@ export default function Navbar() {
     { name: 'Contact', path: '/#contact', sectionId: 'contact' },
     { name: 'Find Doctors', path: '/doctors' },
     { name: 'Book Appointment', path: '/book-appointment' },
-    { name: 'Dashboard', path: '/dashboard' },
+    ...(isAuthenticated ? [{ name: 'Dashboard', path: '/dashboard' }] : []),
   ];
 
   const handleNavLinkClick = (e, link) => {

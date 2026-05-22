@@ -47,7 +47,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-white">
-      <section className="relative lg:h-screen flex items-center bg-white overflow-hidden pt-24 pb-12 lg:py-0">
+      <section className="relative lg:h-screen flex items-center bg-white overflow-hidden pt-24 pb-12 mt-[-60px] lg:py-0">
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
         <div className="absolute bottom-1/6 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 

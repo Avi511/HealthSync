@@ -12,12 +12,18 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
   const successMessage = location.state?.successMessage;
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (successMessage) {
@@ -42,7 +48,7 @@ export default function Login() {
       const userData = await login(email, password);
       setIsLoading(false);
       showSuccess(`Welcome back, ${userData?.firstName || 'User'}! Successfully signed in.`);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       setIsLoading(false);
       setError(err);

@@ -93,7 +93,7 @@ export default function Doctors() {
         {/* Hero Header */}
         <div className="bg-gradient-to-r from-primary to-primary-dark text-white py-12 px-4 shadow-sm mb-12 mt-[-50px] rounded-2xl">
           <div className="max-w-7xl mx-auto text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+            <h1 className="text-5xl md:text-4xl font-bold tracking-tight">
               Find Our Medical Doctors
             </h1>
             <p className="mt-2 text-primary-light text-base md:text-lg max-w-2xl">
