@@ -114,19 +114,66 @@ docker-compose up --build
 
 ## 🧪 Testing the Deployments
 
-Test the running systems inside the private Docker network by starting a temporary client container:
+You can test the running systems directly from your host terminal or by using a client container inside the Docker network.
 
-### 1. Retrieve Registered Users
+### 1. Retrieve Registered Users (REST API)
+Using Host Terminal:
+```powershell
+curl http://localhost:8081/api/users
+```
+Using Client Container:
 ```powershell
 docker run --rm --network backend_default alpine/curl -s http://api-gateway:8080/api/users
 ```
 
 ### 2. Register a New User (POST)
+Using Host Terminal:
 ```powershell
-docker run --rm --network backend_default alpine/curl -s -X POST http://api-gateway:8080/api/users -H "Content-Type: application/json" -d '{\"firstName\":\"Jane\",\"lastName\":\"Doe\",\"email\":\"jane@example.com\",\"password\":\"pass\",\"phone\":\"123\",\"address\":\"Home\"}'
+curl -X POST http://localhost:8081/api/users -H "Content-Type: application/json" -d "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"email\":\"john@example.com\",\"password\":\"123456\",\"phone\":\"+1234567890\",\"address\":\"123 Main St\"}"
+```
+Using Client Container:
+```powershell
+docker run --rm --network backend_default alpine/curl -s -X POST http://api-gateway:8080/api/users -H "Content-Type: application/json" -d "{\"firstName\":\"Jane\",\"lastName\":\"Doe\",\"email\":\"jane@example.com\",\"password\":\"123456\",\"phone\":\"987654321\",\"address\":\"Home\"}"
 ```
 
 ### 3. Retrieve Registered Doctors
 ```powershell
 docker run --rm --network backend_default alpine/curl -s http://api-gateway:8080/api/doctors
 ```
+
+---
+
+## 🗄️ Database Management & Operations
+
+Each database-driven microservice (`user-service`, `doctor-service`, `appointment-service`) manages its own isolated PostgreSQL database schema.
+
+### 1. Database Setup & Architecture
+* **PostgreSQL Container:** Named `healthsync-postgres`, running on port `5432`.
+* **Database Initialization:** On the first run, the container runs [init-db.sql](file:///d:/HealthSync/Backend/init-db.sql) to create the isolated databases:
+  * `user_db` (for `user-service`)
+  * `doctor_db` (for `doctor-service`)
+  * `appointment_db` (for `appointment-service`)
+* **Schema Versioning (Flyway):** When a microservice starts up, **Flyway** automatically creates the `flyway_schema_history` table and executes the SQL migration files located under `src/main/resources/db/migration/` of that service.
+
+### 2. How to See All Users' Data (Including Hashed Passwords)
+User passwords are encrypted securely using **BCrypt** hashing before storing. You can view all registered users and their password hashes by querying the PostgreSQL container directly:
+
+```powershell
+docker exec -t healthsync-postgres psql -U postgres -d user_db -c "SELECT id, first_name, last_name, email, phone, role, password FROM users;"
+```
+
+*Example Output:*
+```text
+ id | first_name |   last_name    |             email              |    phone     |  role   |                           password                           
+----+------------+----------------+--------------------------------+--------------+---------+--------------------------------------------------------------
+  1 | Avishka    | Medagamagodage | aimedagamagodage2003@gmail.com | +94776599189 | PATIENT | $2a$10$U6UvB/VvM54.q51F2W9hCeQj0/KjJzD42Fj8kGv2VfH2WkKjZ1Y4G
+```
+
+### 3. How to Clear All User Data
+If you need to wipe out all users and reset the auto-incrementing primary key ID sequence back to `1` (for testing purposes), run the following database command:
+
+```powershell
+docker exec -t healthsync-postgres psql -U postgres -d user_db -c "TRUNCATE TABLE users RESTART IDENTITY CASCADE;"
+```
+
+*Note: The `RESTART IDENTITY` clause ensures that the next registered user will start with ID `1` again.*
