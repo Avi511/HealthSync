@@ -14,6 +14,7 @@ public class DoctorMapper {
                 .specialization(request.getSpecialization())
                 .hospital(request.getHospital())
                 .experience(request.getExperience())
+                .stage(request.getStage())
                 .phone(request.getPhone())
                 .availability(request.getAvailability())
                 .build();
@@ -28,6 +29,7 @@ public class DoctorMapper {
                 .specialization(doctor.getSpecialization())
                 .hospital(doctor.getHospital())
                 .experience(doctor.getExperience())
+                .stage(doctor.getStage())
                 .phone(doctor.getPhone())
                 .availability(doctor.getAvailability())
                 .build();

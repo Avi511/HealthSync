@@ -65,6 +65,7 @@ public class DoctorServiceImpl implements DoctorService {
         doctor.setSpecialization(request.getSpecialization());
         doctor.setHospital(request.getHospital());
         doctor.setExperience(request.getExperience());
+        doctor.setStage(request.getStage());
         doctor.setPhone(request.getPhone());
         doctor.setAvailability(request.getAvailability());
 

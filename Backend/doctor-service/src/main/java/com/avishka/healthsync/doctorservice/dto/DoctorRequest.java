@@ -22,6 +22,8 @@ public class DoctorRequest {
 
     private Integer experience;
 
+    private String stage;
+
     private String phone;
 
     private String availability;

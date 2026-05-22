@@ -15,6 +15,7 @@ public class DoctorResponse {
     private String specialization;
     private String hospital;
     private Integer experience;
+    private String stage;
     private String phone;
     private String availability;
 }
