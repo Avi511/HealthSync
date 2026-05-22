@@ -164,9 +164,9 @@ docker exec -t healthsync-postgres psql -U postgres -d user_db -c "SELECT id, fi
 
 *Example Output:*
 ```text
- id | first_name |   last_name    |             email              |    phone     |  role   |                           password                           
-----+------------+----------------+--------------------------------+--------------+---------+--------------------------------------------------------------
-  1 | Avishka    | Medagamagodage | aimedagamagodage2003@gmail.com | +94776599189 | PATIENT | $2a$10$U6UvB/VvM54.q51F2W9hCeQj0/KjJzD42Fj8kGv2VfH2WkKjZ1Y4G
+ id | first_name | last_name |      email       |    phone    |  role   |                           password                           
+----+------------+-----------+------------------+-------------+---------+--------------------------------------------------------------
+  1 | John       | Doe       | john@example.com | +1234567890 | PATIENT | $2a$10$eImiTXuWV5j7ae9efMinme8WnJW17W4f4yFk.Gv2VfH2WkKjZ1Y4G
 ```
 
 ### 3. How to Clear All User Data
