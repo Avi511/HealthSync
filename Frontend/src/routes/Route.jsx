@@ -4,6 +4,7 @@ import Home from '../pages/Home';
 import Doctors from '../pages/Doctors';
 import BookAppoinment from '../pages/BookAppoinment';
 import Dashboard from '../pages/Dashboard';
+import AdminDashboard from '../pages/AdminDashboard';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import MedicalFAQ from '../pages/MedicalFAQ';
@@ -13,7 +14,7 @@ import TermsOfService from '../pages/TermsOfService';
 import CookieConfig from '../pages/CookieConfig';
 
 export default function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -23,18 +24,37 @@ export default function AppRoutes() {
     );
   }
 
+  const getHomeRedirect = () => {
+    return user?.role === 'ADMIN' ? '/admin-dashboard' : '/';
+  };
+
   return (
     <Routes>
       {/* Public Pages */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
+      <Route path="/" element={isAuthenticated && user?.role === 'ADMIN' ? <Navigate to="/admin-dashboard" replace /> : <Home />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to={getHomeRedirect()} replace /> : <Login />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to={getHomeRedirect()} replace /> : <Register />} />
 
       {/* Pages accessible to both guest and authenticated users */}
       <Route path="/doctors" element={<Doctors />} />
 
-      {/* Protected routes - Redirect guests to login */}
-      <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} />
+      {/* Protected routes */}
+      <Route 
+        path="/dashboard" 
+        element={
+          isAuthenticated 
+            ? (user?.role === 'ADMIN' ? <Navigate to="/admin-dashboard" replace /> : <Dashboard />) 
+            : <Navigate to="/login" replace />
+        } 
+      />
+      <Route 
+        path="/admin-dashboard" 
+        element={
+          isAuthenticated 
+            ? (user?.role === 'ADMIN' ? <AdminDashboard /> : <Navigate to="/" replace />) 
+            : <Navigate to="/login" replace />
+        } 
+      />
       <Route path="/book-appointment" element={isAuthenticated ? <BookAppoinment /> : <Navigate to="/login" replace />} />
 
       {/* Static Info Pages */}
@@ -45,7 +65,7 @@ export default function AppRoutes() {
       <Route path="/cookies" element={<CookieConfig />} />
 
       {/* Catch-all redirect */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to={getHomeRedirect()} replace />} />
     </Routes>
   );
 }

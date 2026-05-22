@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Footer() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const handleScrollToSection = (sectionId) => {
     if (window.location.pathname === '/') {
@@ -60,11 +60,15 @@ export default function Footer() {
               <li>
                 <Link to="/book-appointment" className="text-gray-500 hover:text-primary transition-colors duration-200 font-light">Book Appointment</Link>
               </li>
-              {isAuthenticated && (
+              {user?.role === 'ADMIN' ? (
+                <li>
+                  <Link to="/admin-dashboard" className="text-gray-500 hover:text-primary transition-colors duration-200 font-light">Admin Dashboard</Link>
+                </li>
+              ) : isAuthenticated ? (
                 <li>
                   <Link to="/dashboard" className="text-gray-500 hover:text-primary transition-colors duration-200 font-light">Dashboard</Link>
                 </li>
-              )}
+              ) : null}
             </ul>
           </div>
 

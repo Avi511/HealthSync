@@ -13,3 +13,18 @@ export const getAllDoctors = async () => {
   const response = await api.get('/api/doctors');
   return response.data;
 };
+
+export const createDoctor = async (doctorData) => {
+  const response = await api.post('/api/doctors', doctorData);
+  return response.data;
+};
+
+export const updateDoctor = async (id, doctorData) => {
+  const response = await api.put(`/api/doctors/${id}`, doctorData);
+  return response.data;
+};
+
+export const deleteDoctor = async (id) => {
+  const response = await api.delete(`/api/doctors/${id}`);
+  return response.data;
+};

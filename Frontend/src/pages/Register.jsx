@@ -17,15 +17,16 @@ export default function Register() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated, user } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/', { replace: true });
+    if (isAuthenticated && user) {
+      const redirectPath = user.role === 'ADMIN' ? '/admin-dashboard' : '/';
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
