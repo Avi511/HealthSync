@@ -9,6 +9,7 @@ import com.avishka.userservice.mapper.UserMapper;
 import com.avishka.userservice.repository.UserRepository;
 import com.avishka.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse createUser(UserRequest request) {
@@ -25,6 +27,8 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email is already registered");
         }
         User user = UserMapper.toEntity(request);
+        // Encrypt password using BCrypt before storing
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
         return UserMapper.toResponse(savedUser);
     }
@@ -34,7 +38,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
-        if (!user.getPassword().equals(loginRequest.getPassword())) {
+        // Match hashed password using BCrypt
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
@@ -71,6 +76,9 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setAddress(request.getAddress());
+        if (request.getRole() != null) {
+            user.setRole(request.getRole());
+        }
 
         User updatedUser = userRepository.save(user);
 

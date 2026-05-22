@@ -13,6 +13,7 @@ public class UserMapper {
                 .phone(userRequest.getPhone())
                 .password(userRequest.getPassword())
                 .address(userRequest.getAddress())
+                .role(userRequest.getRole() != null ? userRequest.getRole() : "PATIENT")
                 .build();
     }
 
@@ -24,6 +25,7 @@ public class UserMapper {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
+                .role(user.getRole())
                 .build();
     }
 }

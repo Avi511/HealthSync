@@ -25,5 +25,8 @@ public class UserRequest {
 
     @NotBlank
     private String address;
+
+    private String role;
     
 }
+
