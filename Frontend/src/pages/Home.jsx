@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { getAllUsers } from '../api/userApi';
+import { getAllDoctors } from '../api/doctorApi';
+import { getAllAppointments } from '../api/appoinmentApi';
 
 export default function Home() {
   const [formData, setFormData] = useState({
@@ -11,6 +14,12 @@ export default function Home() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [stats, setStats] = React.useState({
+    patients: 0,
+    doctors: 0,
+    isLoading: true
+  });
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,6 +40,36 @@ export default function Home() {
     setFormData({ name: '', email: '', subject: '', message: '' });
     setSubmitted(false);
   };
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchStats = async () => {
+      try {
+        const [users, doctors, appointments] = await Promise.all([
+          getAllUsers(),
+          getAllDoctors(),
+          getAllAppointments()
+        ]);
+        const patientCount = Array.isArray(users) ? users.filter(u => u.role === 'PATIENT').length : 0;
+        const doctorCount = Array.isArray(doctors) ? doctors.length : 0;
+        const appointmentCount = Array.isArray(appointments) ? appointments.length : 0;
+        if (isMounted) {
+          setStats({
+            patients: patientCount + appointmentCount,
+            doctors: doctorCount,
+            isLoading: false
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch landing stats:', err);
+        if (isMounted) {
+          setStats(prev => ({ ...prev, isLoading: false }));
+        }
+      }
+    };
+    fetchStats();
+    return () => { isMounted = false; };
+  }, []);
 
   React.useEffect(() => {
     const hash = window.location.hash;
@@ -199,7 +238,7 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200/80">
                 <div className="text-center sm:text-left group cursor-default">
                   <span className="block text-2xl sm:text-3xl font-extrabold text-primary group-hover:scale-105 transition-transform duration-300 origin-left">
-                    10k+
+                    {stats.isLoading ? '...' : `${stats.patients}+`}
                   </span>
                   <span className="text-[10px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase block mt-1">
                     Patients Served
@@ -207,7 +246,7 @@ export default function Home() {
                 </div>
                 <div className="text-center sm:text-left group cursor-default">
                   <span className="block text-2xl sm:text-3xl font-extrabold text-primary group-hover:scale-105 transition-transform duration-300 origin-left">
-                    500+
+                    {stats.isLoading ? '...' : `${stats.doctors}+`}
                   </span>
                   <span className="text-[10px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase block mt-1">
                     Specialists

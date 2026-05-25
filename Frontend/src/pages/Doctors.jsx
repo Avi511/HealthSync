@@ -17,6 +17,15 @@ export default function Doctors() {
   const [filterHospital, setFilterHospital] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const doctorsPerPage = 12;
+
+  // Reset pagination to first page when any search/filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchName, filterId, filterSpecialization, filterStage, filterMinExperience, filterHospital]);
+
   // Dynamic Options derived from data
   const [specializations, setSpecializations] = useState([]);
   const [hospitals, setHospitals] = useState([]);
@@ -85,7 +94,10 @@ export default function Doctors() {
     return true;
   });
 
-  const displayedDoctors = filteredDoctors.slice(0, 12);
+  const totalPages = Math.ceil(filteredDoctors.length / doctorsPerPage);
+  const indexOfLastDoctor = currentPage * doctorsPerPage;
+  const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage;
+  const displayedDoctors = filteredDoctors.slice(indexOfFirstDoctor, indexOfLastDoctor);
 
   return (
     <div className="min-h-screen bg-gray-50/50 pt-24 pb-16">
@@ -266,8 +278,16 @@ export default function Doctors() {
         {/* Results Info Bar */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-sm font-medium text-gray-500">
-            Showing <span className="font-bold text-gray-900">{displayedDoctors.length}</span> of{' '}
-            <span className="font-bold text-gray-900">{filteredDoctors.length}</span> matching doctors (total: {doctors.length})
+            {filteredDoctors.length > 0 ? (
+              <>
+                Showing <span className="font-bold text-gray-900">{indexOfFirstDoctor + 1}–{Math.min(indexOfLastDoctor, filteredDoctors.length)}</span> of{' '}
+                <span className="font-bold text-gray-900">{filteredDoctors.length}</span> matching doctors (total: {doctors.length})
+              </>
+            ) : (
+              <>
+                No matching doctors found (total: {doctors.length})
+              </>
+            )}
           </p>
         </div>
 
@@ -332,25 +352,82 @@ export default function Doctors() {
           </div>
         ) : (
           /* Results Grid */
-          <motion.div
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <AnimatePresence mode="popLayout">
-              {displayedDoctors.map((doctor) => (
-                <motion.div
-                  key={doctor.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+          <div className="space-y-12">
+            <motion.div
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              <AnimatePresence mode="popLayout">
+                {displayedDoctors.map((doctor) => (
+                  <motion.div
+                    key={doctor.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                  >
+                    <DoctorCard doctor={doctor} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`inline-flex items-center px-4 py-2.5 border rounded-xl text-sm font-semibold transition duration-200 ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                      : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 cursor-pointer shadow-sm hover:shadow'
+                  }`}
                 >
-                  <DoctorCard doctor={doctor} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                  <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Previous
+                </button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1.5">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`w-10 h-10 border rounded-xl text-sm font-bold transition duration-200 ${
+                        currentPage === pageNumber
+                          ? 'bg-primary text-white border-primary scale-110 shadow-md cursor-default'
+                          : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 cursor-pointer hover:shadow-sm'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={`inline-flex items-center px-4 py-2.5 border rounded-xl text-sm font-semibold transition duration-200 ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                      : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 cursor-pointer shadow-sm hover:shadow'
+                  }`}
+                >
+                  Next
+                  <svg className="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
