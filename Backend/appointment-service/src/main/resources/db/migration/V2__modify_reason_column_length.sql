@@ -1,0 +1,1 @@
+ALTER TABLE appointments ALTER COLUMN reason TYPE VARCHAR(2000);

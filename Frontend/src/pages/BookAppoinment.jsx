@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getAllDoctors } from '../api/doctorApi';
-import { createAppointment } from '../api/appoinmentApi';
+import { createAppointment, getAppointmentsByDoctor } from '../api/appoinmentApi';
 
 export default function BookAppoinment() {
   const { user } = useAuth();
@@ -16,6 +16,10 @@ export default function BookAppoinment() {
   const [doctors, setDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Appointments for the selected doctor
+  const [appointments, setAppointments] = useState([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
 
   // Form State
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
@@ -52,6 +56,14 @@ export default function BookAppoinment() {
     fetchDoctors();
   }, []);
 
+  useEffect(() => {
+    if (selectedDoctorId) {
+      fetchDoctorAppointments(selectedDoctorId);
+    } else {
+      setAppointments([]);
+    }
+  }, [selectedDoctorId]);
+
   const fetchDoctors = async () => {
     try {
       setLoadingDoctors(true);
@@ -74,7 +86,31 @@ export default function BookAppoinment() {
     }
   };
 
+  const fetchDoctorAppointments = async (docId) => {
+    try {
+      setLoadingAppointments(true);
+      const data = await getAppointmentsByDoctor(docId);
+      setAppointments(data || []);
+    } catch (err) {
+      console.error('Error fetching doctor appointments:', err);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
   const selectedDoctor = doctors.find((d) => d.id.toString() === selectedDoctorId);
+
+  // Filter doctor appointments for selected date (excluding cancelled ones)
+  const bookedOnSelectedDate = appointments
+    .filter((appt) => appt.appointmentDate === appointmentDate && appt.status !== 'CANCELLED')
+    .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+
+  const isSlotBooked = (slotValue) => {
+    return bookedOnSelectedDate.some((appt) => {
+      const apptTime = appt.appointmentTime.slice(0, 5); // get HH:mm
+      return apptTime === slotValue;
+    });
+  };
 
   // Parse availability helper (e.g. "Mon-Wed, 9AM-3PM")
   const parseAvailability = (availabilityStr) => {
@@ -240,6 +276,10 @@ export default function BookAppoinment() {
       showError('Please choose a preferred time slot.');
       return;
     }
+    if (isSlotBooked(appointmentTime)) {
+      showError('This time slot has already been reserved. Please pick another.');
+      return;
+    }
     if (!reason.trim()) {
       showError('Please provide a reason for your visit.');
       return;
@@ -372,13 +412,17 @@ export default function BookAppoinment() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {activeTimeSlots.map((slot) => {
                       const isSelected = appointmentTime === slot.value;
+                      const isBooked = isSlotBooked(slot.value);
                       return (
                         <button
                           key={slot.value}
                           type="button"
+                          disabled={isBooked}
                           onClick={() => setAppointmentTime(slot.value)}
                           className={`py-3 px-4 rounded-xl border text-xs font-bold transition-all duration-200 text-center ${
-                            isSelected
+                            isBooked
+                              ? 'bg-gray-100 text-gray-400 border-gray-150 cursor-not-allowed line-through'
+                              : isSelected
                               ? 'bg-primary text-white border-primary shadow-sm scale-[1.03] cursor-default'
                               : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:text-gray-900 cursor-pointer hover:shadow-sm'
                           }`}
@@ -464,82 +508,143 @@ export default function BookAppoinment() {
           </div>
 
           {/* Doctor Detail Sidecard Column */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             {selectedDoctor ? (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group">
-                <div className="h-2 bg-gradient-to-r from-primary to-primary-accent"></div>
-                <div className="p-6">
-                  
-                  {/* Doctor Card Avatar / Details */}
-                  <div className="flex flex-col items-center text-center pb-6 border-b border-gray-100">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-accent to-primary text-white font-bold text-2xl flex items-center justify-center shadow-inner relative mb-4">
-                      {getInitials(selectedDoctor.fullName)}
-                      <span className="absolute -bottom-1 -right-1 bg-white text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100">
-                        #{selectedDoctor.id}
-                      </span>
-                    </div>
-                    <h3 className="font-extrabold text-xl text-gray-900 group-hover:text-primary transition-colors duration-200">
-                      {selectedDoctor.fullName}
-                    </h3>
-                    <p className="text-sm font-semibold text-primary/95 mt-1">
-                      {selectedDoctor.specialization}
-                    </p>
-                    {selectedDoctor.stage && (
-                      <span className={`inline-block mt-3 text-[10px] font-semibold tracking-wide uppercase px-2.5 py-1 rounded-full border ${getStageBadgeStyles(selectedDoctor.stage)}`}>
-                        {formatStage(selectedDoctor.stage)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Metadata fields */}
-                  <div className="space-y-4 pt-6 text-sm text-gray-600">
+              <>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group">
+                  <div className="h-2 bg-gradient-to-r from-primary to-primary-accent"></div>
+                  <div className="p-6">
                     
-                    <div className="flex items-start space-x-3">
-                      <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <div>
-                        <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Hospital Affiliation</span>
-                        <span className="font-medium text-gray-800">{selectedDoctor.hospital}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-3">
-                      <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div>
-                        <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Weekly Availability</span>
-                        <span className="inline-block mt-0.5 text-xs font-semibold text-primary bg-primary-light/50 px-2 py-0.5 rounded-md">
-                          {selectedDoctor.availability || 'Call for Availability'}
+                    {/* Doctor Card Avatar / Details */}
+                    <div className="flex flex-col items-center text-center pb-6 border-b border-gray-100">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-accent to-primary text-white font-bold text-2xl flex items-center justify-center shadow-inner relative mb-4">
+                        {getInitials(selectedDoctor.fullName)}
+                        <span className="absolute -bottom-1 -right-1 bg-white text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100">
+                          #{selectedDoctor.id}
                         </span>
                       </div>
+                      <h3 className="font-extrabold text-xl text-gray-900 group-hover:text-primary transition-colors duration-200">
+                        {selectedDoctor.fullName}
+                      </h3>
+                      <p className="text-sm font-semibold text-primary/95 mt-1">
+                        {selectedDoctor.specialization}
+                      </p>
+                      {selectedDoctor.stage && (
+                        <span className={`inline-block mt-3 text-[10px] font-semibold tracking-wide uppercase px-2.5 py-1 rounded-full border ${getStageBadgeStyles(selectedDoctor.stage)}`}>
+                          {formatStage(selectedDoctor.stage)}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-start space-x-3">
-                      <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                      <div>
-                        <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Professional Experience</span>
-                        <span className="font-medium text-gray-800">{selectedDoctor.experience} Years Active Practice</span>
+                    {/* Metadata fields */}
+                    <div className="space-y-4 pt-6 text-sm text-gray-600">
+                      
+                      <div className="flex items-start space-x-3">
+                        <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <div>
+                          <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Hospital Affiliation</span>
+                          <span className="font-medium text-gray-800">{selectedDoctor.hospital}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-start space-x-3">
-                      <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <div>
-                        <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Email Address</span>
-                        <span className="text-gray-800 font-medium select-all break-all">{selectedDoctor.email}</span>
+                      <div className="flex items-start space-x-3">
+                        <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Weekly Availability</span>
+                          <span className="inline-block mt-0.5 text-xs font-semibold text-primary bg-primary-light/50 px-2 py-0.5 rounded-md">
+                            {selectedDoctor.availability || 'Call for Availability'}
+                          </span>
+                        </div>
                       </div>
+
+                      <div className="flex items-start space-x-3">
+                        <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <div>
+                          <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Professional Experience</span>
+                          <span className="font-medium text-gray-800">{selectedDoctor.experience} Years Active Practice</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3">
+                        <svg className="w-5 h-5 text-gray-400 stroke-current flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <div>
+                          <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Email Address</span>
+                          <span className="text-gray-800 font-medium select-all break-all">{selectedDoctor.email}</span>
+                        </div>
+                      </div>
+
                     </div>
 
                   </div>
-
                 </div>
-              </div>
+
+                {/* Booked Appointments for Selected Date Card */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                    <svg className="w-4.5 h-4.5 text-primary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Doctor's Schedule for {appointmentDate ? new Date(appointmentDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'}) : 'Selected Date'}
+                  </h3>
+
+                  {!appointmentDate ? (
+                    <p className="text-xs text-gray-500 italic">Please select an appointment date to see existing bookings.</p>
+                  ) : loadingAppointments ? (
+                    <div className="space-y-2.5 animate-pulse">
+                      <div className="h-9 bg-gray-50 rounded-xl"></div>
+                      <div className="h-9 bg-gray-50 rounded-xl"></div>
+                    </div>
+                  ) : bookedOnSelectedDate.length === 0 ? (
+                    <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 p-3.5 rounded-xl flex items-start space-x-2">
+                      <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <span className="font-semibold block">All Slots Available</span>
+                        <span className="text-[11px] text-emerald-600">No appointments have been booked for this doctor on this day.</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Reserved Time Slots ({bookedOnSelectedDate.length})</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
+                        {bookedOnSelectedDate.map((appt) => {
+                          const formatTime24 = appt.appointmentTime.slice(0, 5);
+                          const slotObj = timeSlots.find((s) => s.value === formatTime24);
+                          const timeLabel = slotObj ? slotObj.label : appt.appointmentTime;
+                          return (
+                            <div
+                              key={appt.id}
+                              className="flex flex-col px-3.5 py-2.5 bg-red-50/40 border border-red-100 rounded-xl text-xs"
+                            >
+                              <div className="flex items-center justify-between font-semibold text-red-700 mb-1.5">
+                                <div className="flex items-center space-x-2">
+                                  <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span>{timeLabel}</span>
+                                </div>
+                                <span className="text-[9px] uppercase font-extrabold tracking-wide text-red-500 bg-red-100/70 px-2 py-0.5 rounded-md">Reserved</span>
+                              </div>
+                              <div className="text-[11px] text-red-600 bg-red-50/50 p-1.5 rounded border border-red-100">
+                                <span className="font-bold">Reason:</span> {appt.reason || 'General Checkup'}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <div className="bg-white rounded-2xl border border-gray-150 p-8 text-center shadow-sm">
                 <div className="w-16 h-16 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-400">
