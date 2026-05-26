@@ -1,0 +1,9 @@
+ALTER TABLE users ADD COLUMN is_verified BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE otp_verifications (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp_code VARCHAR(10) NOT NULL,
+    expiration_time TIMESTAMP NOT NULL,
+    is_used BOOLEAN NOT NULL DEFAULT FALSE
+);

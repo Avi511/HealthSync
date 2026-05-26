@@ -3,6 +3,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { GoogleLogin } from '@react-oauth/google';
+import { googleLoginUser, verifyOtp, resendOtp } from '../api/authApi';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,7 +15,12 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login, isAuthenticated, user } = useAuth();
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const { login, isAuthenticated, user, setAuthenticatedUser } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,8 +67,75 @@ export default function Login() {
       navigate(redirectPath);
     } catch (err) {
       setIsLoading(false);
-      setError(err);
-      showError(err || 'Failed to sign in.');
+      if (typeof err === 'string' && err.includes('not verified')) {
+        setUnverifiedEmail(email);
+        setShowOtpModal(true);
+        showSuccess('Please check your email for the verification code.');
+      } else {
+        setError(err);
+        showError(err || 'Failed to sign in.');
+      }
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setIsLoading(true);
+      const userData = await googleLoginUser(credentialResponse.credential);
+      setIsLoading(false);
+      setAuthenticatedUser(userData);
+      showSuccess(`Welcome, ${userData?.firstName || 'User'}! Successfully signed in via Google.`);
+      let redirectPath = '/';
+      if (userData?.role === 'ADMIN') redirectPath = '/admin-dashboard';
+      if (userData?.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
+      navigate(redirectPath);
+    } catch (err) {
+      setIsLoading(false);
+      const errMsg = err.response?.data?.message || err.message || err;
+      if (typeof errMsg === 'string' && errMsg.includes('not verified')) {
+        try {
+          const decoded = jwtDecode(credentialResponse.credential);
+          setUnverifiedEmail(decoded.email);
+          setShowOtpModal(true);
+          showSuccess('Account created! Please verify your email with the OTP sent.');
+        } catch(e) {
+          showError('Could not decode Google token email.');
+        }
+      } else {
+        setError(errMsg);
+        showError(errMsg || 'Google login failed.');
+      }
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      showError('Please enter a valid 6-digit OTP.');
+      return;
+    }
+    setIsVerifying(true);
+    try {
+      const userData = await verifyOtp(unverifiedEmail, otpCode);
+      setIsVerifying(false);
+      setShowOtpModal(false);
+      setAuthenticatedUser(userData);
+      showSuccess(`Email verified successfully! Welcome back, ${userData?.firstName || 'User'}!`);
+      let redirectPath = '/';
+      if (userData?.role === 'ADMIN') redirectPath = '/admin-dashboard';
+      if (userData?.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
+      navigate(redirectPath, { replace: true });
+    } catch (err) {
+      setIsVerifying(false);
+      showError(err.response?.data?.message || 'Invalid or expired OTP.');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await resendOtp(unverifiedEmail);
+      showSuccess('A new OTP has been sent to your email.');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to resend OTP.');
     }
   };
 
@@ -222,6 +297,25 @@ export default function Login() {
                 <span>Sign In</span>
               )}
             </button>
+            
+            <div className="relative flex items-center justify-center mt-6">
+              <span className="absolute bg-white px-2 text-xs text-gray-500">Or continue with</span>
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+
+            <div className="flex justify-center mt-6">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  showError('Google Sign-In was unsuccessful.');
+                }}
+                useOneTap
+                theme="outline"
+                size="large"
+                shape="rectangular"
+                width="100%"
+              />
+            </div>
           </form>
 
           {/* Footer Link */}
@@ -235,6 +329,62 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* OTP Modal Overlay */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm overflow-y-auto p-4 sm:p-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative my-auto">
+            <button 
+              onClick={() => setShowOtpModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-primary-light/20 text-primary rounded-full flex items-center justify-center mx-auto mb-2">
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Verify Email</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                We've sent a 6-digit verification code to <br/><span className="font-semibold text-gray-800">{unverifiedEmail}</span>.
+              </p>
+              
+              <div className="pt-4 space-y-4">
+                <input
+                  type="text"
+                  maxLength="6"
+                  placeholder="------"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                  className="w-full text-center text-3xl tracking-[0.5em] font-mono font-bold bg-gray-50 border border-gray-200 py-4 rounded-xl outline-none text-black transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+                
+                <button
+                  onClick={handleVerifyOtp}
+                  disabled={isVerifying || otpCode.length !== 6}
+                  className={`w-full py-4 rounded-xl text-sm font-semibold tracking-wide text-white bg-primary hover:bg-primary-dark transition-all duration-200 shadow-sm ${
+                    isVerifying || otpCode.length !== 6 ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isVerifying ? 'Verifying...' : 'Verify Code'}
+                </button>
+                
+                <p className="text-xs text-gray-500 font-medium">
+                  Didn't receive it?{' '}
+                  <button onClick={handleResendOtp} className="text-primary hover:underline font-semibold">
+                    Resend Code
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

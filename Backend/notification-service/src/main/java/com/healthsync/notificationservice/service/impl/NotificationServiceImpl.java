@@ -18,18 +18,27 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public NotificationResponse sendEmail(EmailRequest request) {
+        System.out.println("📬 Attempting to send email to: " + request.getTo());
+        try {
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setTo(request.getTo());
+            mailMessage.setSubject(request.getSubject());
+            mailMessage.setText(request.getMessage());
+            mailMessage.setFrom("health.sync.26@gmail.com");
 
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-
-        mailMessage.setTo(request.getTo());
-        mailMessage.setSubject(request.getSubject());
-        mailMessage.setText(request.getMessage());
-
-        mailSender.send(mailMessage);
-
-        return NotificationResponse.builder()
-                .status("SUCCESS")
-                .message("Email sent successfully")
-                .build();
+            mailSender.send(mailMessage);
+            System.out.println("✅ Email sent successfully to " + request.getTo());
+            return NotificationResponse.builder()
+                    .status("SUCCESS")
+                    .message("Email sent successfully")
+                    .build();
+        } catch (Exception e) {
+            System.err.println("❌ ERROR: Failed to send email to " + request.getTo());
+            e.printStackTrace();
+            return NotificationResponse.builder()
+                    .status("FAILED")
+                    .message("Failed to send email: " + e.getMessage())
+                    .build();
+        }
     }
 }

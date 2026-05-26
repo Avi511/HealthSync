@@ -20,11 +20,27 @@ export default function DoctorDashboard() {
     hospital: '',
     experience: '',
     stage: '',
-    availability: '',
     phone: '',
     email: '',
+    startDay: 'Mon',
+    endDay: 'Fri',
+    startTime: '9AM',
+    endTime: '5PM',
     password: ''
   });
+
+  const daysList = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const timesList = ['1AM','2AM','3AM','4AM','5AM','6AM','7AM','8AM','9AM','10AM','11AM','12PM','1PM','2PM','3PM','4PM','5PM','6PM','7PM','8PM','9PM','10PM','11PM','12AM'];
+
+  const parseAvail = (availStr) => {
+    try {
+      const match = availStr.match(/([a-zA-Z]{3,})\s*-\s*([a-zA-Z]{3,}).*?(\d+(?:AM|PM))\s*-\s*(\d+(?:AM|PM))/i);
+      if (match) {
+        return { startDay: match[1], endDay: match[2], startTime: match[3].toUpperCase(), endTime: match[4].toUpperCase() };
+      }
+    } catch(e) {}
+    return { startDay: 'Mon', endDay: 'Fri', startTime: '9AM', endTime: '5PM' };
+  };
 
   useEffect(() => {
     fetchDoctorData();
@@ -45,9 +61,9 @@ export default function DoctorDashboard() {
         hospital: docData.hospital || '',
         experience: docData.experience || '',
         stage: docData.stage || '',
-        availability: docData.availability || '',
         phone: docData.phone || '',
         email: docData.email || '',
+        ...parseAvail(docData.availability || ''),
         password: docData.password || ''
       });
 
@@ -65,7 +81,11 @@ export default function DoctorDashboard() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      const updatedDoc = await updateDoctor(doctor.id, editForm);
+      const payload = {
+        ...editForm,
+        availability: `Available ${editForm.startDay}-${editForm.endDay} ${editForm.startTime}-${editForm.endTime}`
+      };
+      const updatedDoc = await updateDoctor(doctor.id, payload);
       setDoctor(updatedDoc);
       setShowEditModal(false);
       showSuccess("Profile updated successfully!");
@@ -246,9 +266,41 @@ export default function DoctorDashboard() {
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Phone</label>
                   <input type="tel" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className="w-full bg-slate-50 text-sm border border-slate-200 px-4 py-3 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary" required />
                 </div>
-                <div>
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Availability</label>
-                  <input type="text" value={editForm.availability} onChange={e => setEditForm({ ...editForm, availability: e.target.value })} className="w-full bg-slate-50 text-sm border border-slate-200 px-4 py-3 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary" required />
+                  <div className="flex items-center space-x-2">
+                    <select
+                      value={editForm.startDay}
+                      onChange={(e) => setEditForm({ ...editForm, startDay: e.target.value })}
+                      className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-3 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                    >
+                      {daysList.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <span className="text-sm text-gray-500 font-semibold">to</span>
+                    <select
+                      value={editForm.endDay}
+                      onChange={(e) => setEditForm({ ...editForm, endDay: e.target.value })}
+                      className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-3 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                    >
+                      {daysList.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+
+                    <select
+                      value={editForm.startTime}
+                      onChange={(e) => setEditForm({ ...editForm, startTime: e.target.value })}
+                      className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-3 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                    >
+                      {timesList.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <span className="text-sm text-gray-500 font-semibold">to</span>
+                    <select
+                      value={editForm.endTime}
+                      onChange={(e) => setEditForm({ ...editForm, endTime: e.target.value })}
+                      className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-3 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                    >
+                      {timesList.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="pt-4 flex justify-end space-x-3">

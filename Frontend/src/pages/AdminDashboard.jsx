@@ -45,9 +45,25 @@ export default function AdminDashboard() {
     experience: '',
     stage: 'MO',
     phone: '',
-    availability: 'Available',
+    startDay: 'Mon',
+    endDay: 'Fri',
+    startTime: '9AM',
+    endTime: '5PM',
     password: ''
   });
+
+  const daysList = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const timesList = ['1AM','2AM','3AM','4AM','5AM','6AM','7AM','8AM','9AM','10AM','11AM','12PM','1PM','2PM','3PM','4PM','5PM','6PM','7PM','8PM','9PM','10PM','11PM','12AM'];
+
+  const parseAvail = (availStr) => {
+    try {
+      const match = availStr.match(/([a-zA-Z]{3,})\s*-\s*([a-zA-Z]{3,}).*?(\d+(?:AM|PM))\s*-\s*(\d+(?:AM|PM))/i);
+      if (match) {
+        return { startDay: match[1], endDay: match[2], startTime: match[3].toUpperCase(), endTime: match[4].toUpperCase() };
+      }
+    } catch(e) {}
+    return { startDay: 'Mon', endDay: 'Fri', startTime: '9AM', endTime: '5PM' };
+  };
 
   const { showSuccess, showError } = useToast();
 
@@ -148,7 +164,7 @@ export default function AdminDashboard() {
         experience: doctor.experience,
         stage: doctor.stage || 'MO',
         phone: doctor.phone || '',
-        availability: doctor.availability || 'Available',
+        ...parseAvail(doctor.availability || ''),
         password: ''
       });
     } else {
@@ -161,7 +177,10 @@ export default function AdminDashboard() {
         experience: '',
         stage: 'MO',
         phone: '',
-        availability: 'Available',
+        startDay: 'Mon',
+        endDay: 'Fri',
+        startTime: '9AM',
+        endTime: '5PM',
         password: ''
       });
     }
@@ -172,6 +191,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     const payload = {
       ...doctorForm,
+      availability: `Available ${doctorForm.startDay}-${doctorForm.endDay} ${doctorForm.startTime}-${doctorForm.endTime}`,
       experience: parseInt(doctorForm.experience) || 0
     };
     if (!payload.password) {
@@ -760,16 +780,41 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">Availability Description</label>
-                <input
-                  type="text"
-                  required
-                  value={doctorForm.availability}
-                  onChange={(e) => setDoctorForm({ ...doctorForm, availability: e.target.value })}
-                  placeholder="Mon, Wed 9AM - 1PM"
-                  className="w-full bg-slate-50 text-sm border border-slate-200 px-4 py-2.5 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary"
-                />
+              <div className="space-y-1 col-span-2">
+                <label className="text-xs font-semibold text-slate-700 block">Working Availability</label>
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={doctorForm.startDay}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, startDay: e.target.value })}
+                    className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-2.5 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                  >
+                    {daysList.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                  <span className="text-sm text-gray-500 font-semibold">to</span>
+                  <select
+                    value={doctorForm.endDay}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, endDay: e.target.value })}
+                    className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-2.5 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                  >
+                    {daysList.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+
+                  <select
+                    value={doctorForm.startTime}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, startTime: e.target.value })}
+                    className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-2.5 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                  >
+                    {timesList.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <span className="text-sm text-gray-500 font-semibold">to</span>
+                  <select
+                    value={doctorForm.endTime}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, endTime: e.target.value })}
+                    className="w-full bg-slate-50 text-sm border border-slate-200 px-3 py-2.5 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary cursor-pointer"
+                  >
+                    {timesList.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-1">

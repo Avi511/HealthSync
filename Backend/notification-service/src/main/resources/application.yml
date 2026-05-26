@@ -11,15 +11,15 @@ spring:
 
   mail:
     host: smtp.gmail.com
-    port: 587
-    username: your-email@gmail.com
-    password: your-app-password
+    port: 465
+    username: health.sync.26@gmail.com
+    password: qagixemjsbzblods
 
     properties:
       mail:
         smtp:
           auth: true
-          starttls:
+          ssl:
             enable: true
 
 eureka:

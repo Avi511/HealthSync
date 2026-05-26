@@ -18,3 +18,18 @@ export const loginUser = async (credentials) => {
   const response = await api.post('/api/users/login', credentials);
   return response.data;
 };
+
+export const verifyOtp = async (email, otp) => {
+  const response = await api.post('/api/users/verify-otp', { email, otp });
+  return response.data;
+};
+
+export const resendOtp = async (email) => {
+  const response = await api.post('/api/users/resend-otp', { email });
+  return response.data;
+};
+
+export const googleLoginUser = async (tokenId) => {
+  const response = await api.post('/api/users/auth/google', { tokenId });
+  return response.data;
+};

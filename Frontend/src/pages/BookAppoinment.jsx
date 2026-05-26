@@ -100,9 +100,9 @@ export default function BookAppoinment() {
 
   const selectedDoctor = doctors.find((d) => d.id.toString() === selectedDoctorId);
 
-  // Filter all doctor appointments (excluding cancelled ones)
+  // Filter all doctor appointments (excluding cancelled and completed ones)
   const activeAppointments = appointments
-    .filter((appt) => appt.status !== 'CANCELLED')
+    .filter((appt) => appt.status !== 'CANCELLED' && appt.status !== 'COMPLETED')
     .sort((a, b) => {
       if (a.appointmentDate === b.appointmentDate) {
         return a.appointmentTime.localeCompare(b.appointmentTime);
@@ -117,52 +117,48 @@ export default function BookAppoinment() {
     });
   };
 
-  // Parse availability helper (e.g. "Mon-Wed, 9AM-3PM")
+  // Parse availability helper (e.g. "Mon-Wed, 9AM-3PM" or "Available Mon-Fri 9AM-5PM")
   const parseAvailability = (availabilityStr) => {
     if (!availabilityStr || availabilityStr.toLowerCase().includes('call for')) {
       return { hasAvailability: false };
     }
 
     try {
-      const parts = availabilityStr.split(',');
-      if (parts.length < 2) return { hasAvailability: false };
+      // Find days and times regardless of comma
+      const dayRangeMatch = availabilityStr.match(/([a-zA-Z]{3,})\s*-\s*([a-zA-Z]{3,})/);
+      const timeRangeMatch = availabilityStr.match(/(\d+)(AM|PM)\s*-\s*(\d+)(AM|PM)/i);
 
-      const dayRangeStr = parts[0].trim();
-      const timeRangeStr = parts[1].trim();
+      if (!dayRangeMatch || !timeRangeMatch) {
+        return { hasAvailability: false };
+      }
 
       const dayMap = {
         'SUN': 0, 'MON': 1, 'TUE': 2, 'WED': 3, 'THU': 4, 'FRI': 5, 'SAT': 6
       };
 
-      const dayRangeMatch = dayRangeStr.match(/([a-zA-Z]+)\s*-\s*([a-zA-Z]+)/);
       let startDay = null;
       let endDay = null;
-      if (dayRangeMatch) {
-        const startName = dayRangeMatch[1].toUpperCase().slice(0, 3);
-        const endName = dayRangeMatch[2].toUpperCase().slice(0, 3);
-        if (dayMap[startName] !== undefined && dayMap[endName] !== undefined) {
-          startDay = dayMap[startName];
-          endDay = dayMap[endName];
-        }
+      const startName = dayRangeMatch[1].toUpperCase().slice(0, 3);
+      const endName = dayRangeMatch[2].toUpperCase().slice(0, 3);
+      if (dayMap[startName] !== undefined && dayMap[endName] !== undefined) {
+        startDay = dayMap[startName];
+        endDay = dayMap[endName];
       }
 
-      const timeRangeMatch = timeRangeStr.match(/(\d+)(AM|PM)\s*-\s*(\d+)(AM|PM)/i);
       let startHour = null;
       let endHour = null;
-      if (timeRangeMatch) {
-        const startVal = parseInt(timeRangeMatch[1], 10);
-        const startAmpm = timeRangeMatch[2].toUpperCase();
-        const endVal = parseInt(timeRangeMatch[3], 10);
-        const endAmpm = timeRangeMatch[4].toUpperCase();
+      const startVal = parseInt(timeRangeMatch[1], 10);
+      const startAmpm = timeRangeMatch[2].toUpperCase();
+      const endVal = parseInt(timeRangeMatch[3], 10);
+      const endAmpm = timeRangeMatch[4].toUpperCase();
 
-        startHour = startVal;
-        if (startAmpm === 'PM' && startVal !== 12) startHour += 12;
-        if (startAmpm === 'AM' && startVal === 12) startHour = 0;
+      startHour = startVal;
+      if (startAmpm === 'PM' && startVal !== 12) startHour += 12;
+      if (startAmpm === 'AM' && startVal === 12) startHour = 0;
 
-        endHour = endVal;
-        if (endAmpm === 'PM' && endVal !== 12) endHour += 12;
-        if (endAmpm === 'AM' && endVal === 12) endHour = 0;
-      }
+      endHour = endVal;
+      if (endAmpm === 'PM' && endVal !== 12) endHour += 12;
+      if (endAmpm === 'AM' && endVal === 12) endHour = 0;
 
       return {
         hasAvailability: startDay !== null && startHour !== null,
@@ -170,8 +166,8 @@ export default function BookAppoinment() {
         endDay,
         startHour,
         endHour,
-        dayRangeStr,
-        timeRangeStr
+        dayRangeStr: dayRangeMatch[0],
+        timeRangeStr: timeRangeMatch[0]
       };
     } catch (e) {
       console.error('Error parsing availability:', e);

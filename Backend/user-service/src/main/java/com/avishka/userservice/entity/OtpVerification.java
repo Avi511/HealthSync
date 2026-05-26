@@ -3,41 +3,30 @@ package com.avishka.userservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "users")
+@Table(name = "otp_verifications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class OtpVerification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String firstName;
-
-    @Column(nullable = false)
-    private String lastName;
-
-    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
-    private String password;
+    private String otpCode;
 
     @Column(nullable = false)
-    private String phone;
-
-    @Column(nullable = false)
-    private String address;
-
-    @Column(nullable = false)
-    private String role;
+    private LocalDateTime expirationTime;
 
     @Column(nullable = false, columnDefinition = "boolean default false")
-    private boolean isVerified;
-
+    private boolean isUsed;
 }

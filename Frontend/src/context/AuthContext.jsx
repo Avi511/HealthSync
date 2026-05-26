@@ -30,6 +30,11 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const setAuthenticatedUser = (data) => {
+    setUser(data);
+    localStorage.setItem('healthsync_user', JSON.stringify(data));
+  };
+
   const register = async (userData) => {
     try {
       const data = await registerUser(userData);
@@ -51,6 +56,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    setAuthenticatedUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

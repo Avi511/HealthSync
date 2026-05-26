@@ -36,6 +36,27 @@ public class UserController {
         return ResponseEntity.ok(userService.login(request));
     }
 
+    @PostMapping("/verify-otp")
+    public ResponseEntity<UserResponse> verifyOtp(@RequestBody com.avishka.userservice.dto.OtpRequest request) {
+        UserResponse response = userService.verifyOtp(request.getEmail(), request.getOtp());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<String> resendOtp(@RequestBody java.util.Map<String, String> request) {
+        userService.resendOtp(request.get("email"));
+        return ResponseEntity.ok("OTP resent successfully");
+    }
+
+    @PostMapping("/auth/google")
+    public ResponseEntity<UserResponse> googleLogin(@RequestBody com.avishka.userservice.dto.GoogleLoginRequest request) {
+        try {
+            return ResponseEntity.ok(userService.googleLogin(request.getTokenId()));
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());

@@ -20,4 +20,10 @@ public interface UserService {
 
     UserResponse login(LoginRequest loginRequest);
 
+    UserResponse verifyOtp(String email, String otp);
+
+    void resendOtp(String email);
+
+    UserResponse googleLogin(String tokenId) throws Exception;
+
 }
