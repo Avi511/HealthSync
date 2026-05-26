@@ -24,6 +24,18 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse createAppointment(AppointmentRequest request) {
         Appointment appointment = AppointmentMapper.toEntity(request);
+        
+        boolean isBooked = appointmentRepository.existsByDoctorIdAndAppointmentDateAndAppointmentTimeAndStatusNot(
+                appointment.getDoctorId(),
+                appointment.getAppointmentDate(),
+                appointment.getAppointmentTime(),
+                com.avishka.appointmentservice.enums.AppointmentStatus.CANCELLED
+        );
+        
+        if (isBooked) {
+            throw new IllegalStateException("This time slot has already been booked for this doctor.");
+        }
+        
         Appointment savedAppointment = appointmentRepository.save(appointment);
         return AppointmentMapper.toResponse(savedAppointment);
     }

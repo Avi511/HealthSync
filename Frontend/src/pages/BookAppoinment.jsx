@@ -100,15 +100,20 @@ export default function BookAppoinment() {
 
   const selectedDoctor = doctors.find((d) => d.id.toString() === selectedDoctorId);
 
-  // Filter doctor appointments for selected date (excluding cancelled ones)
-  const bookedOnSelectedDate = appointments
-    .filter((appt) => appt.appointmentDate === appointmentDate && appt.status !== 'CANCELLED')
-    .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+  // Filter all doctor appointments (excluding cancelled ones)
+  const activeAppointments = appointments
+    .filter((appt) => appt.status !== 'CANCELLED')
+    .sort((a, b) => {
+      if (a.appointmentDate === b.appointmentDate) {
+        return a.appointmentTime.localeCompare(b.appointmentTime);
+      }
+      return a.appointmentDate.localeCompare(b.appointmentDate);
+    });
 
   const isSlotBooked = (slotValue) => {
-    return bookedOnSelectedDate.some((appt) => {
+    return activeAppointments.some((appt) => {
       const apptTime = appt.appointmentTime.slice(0, 5); // get HH:mm
-      return apptTime === slotValue;
+      return appt.appointmentDate === appointmentDate && apptTime === slotValue;
     });
   };
 
@@ -421,7 +426,7 @@ export default function BookAppoinment() {
                           onClick={() => setAppointmentTime(slot.value)}
                           className={`py-3 px-4 rounded-xl border text-xs font-bold transition-all duration-200 text-center ${
                             isBooked
-                              ? 'bg-gray-100 text-gray-400 border-gray-150 cursor-not-allowed line-through'
+                              ? 'bg-red-50 text-red-400 border-red-200 cursor-not-allowed line-through'
                               : isSelected
                               ? 'bg-primary text-white border-primary shadow-sm scale-[1.03] cursor-default'
                               : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:text-gray-900 cursor-pointer hover:shadow-sm'
@@ -586,56 +591,51 @@ export default function BookAppoinment() {
                   </div>
                 </div>
 
-                {/* Booked Appointments for Selected Date Card */}
+                {/* All Appointments Card */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center">
                     <svg className="w-4.5 h-4.5 text-primary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Doctor's Schedule for {appointmentDate ? new Date(appointmentDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'}) : 'Selected Date'}
+                    All Appointments
                   </h3>
 
-                  {!appointmentDate ? (
-                    <p className="text-xs text-gray-500 italic">Please select an appointment date to see existing bookings.</p>
-                  ) : loadingAppointments ? (
+                  {loadingAppointments ? (
                     <div className="space-y-2.5 animate-pulse">
                       <div className="h-9 bg-gray-50 rounded-xl"></div>
                       <div className="h-9 bg-gray-50 rounded-xl"></div>
                     </div>
-                  ) : bookedOnSelectedDate.length === 0 ? (
+                  ) : activeAppointments.length === 0 ? (
                     <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 p-3.5 rounded-xl flex items-start space-x-2">
                       <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div>
-                        <span className="font-semibold block">All Slots Available</span>
-                        <span className="text-[11px] text-emerald-600">No appointments have been booked for this doctor on this day.</span>
+                        <span className="font-semibold block">No Appointments</span>
+                        <span className="text-[11px] text-emerald-600">This doctor currently has no booked appointments.</span>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Reserved Time Slots ({bookedOnSelectedDate.length})</p>
+                      <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Reserved Appointments ({activeAppointments.length})</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
-                        {bookedOnSelectedDate.map((appt) => {
+                        {activeAppointments.map((appt) => {
                           const formatTime24 = appt.appointmentTime.slice(0, 5);
                           const slotObj = timeSlots.find((s) => s.value === formatTime24);
                           const timeLabel = slotObj ? slotObj.label : appt.appointmentTime;
                           return (
                             <div
                               key={appt.id}
-                              className="flex flex-col px-3.5 py-2.5 bg-red-50/40 border border-red-100 rounded-xl text-xs"
+                              className="flex flex-col px-3.5 py-2.5 bg-green-50/40 border border-green-100 rounded-xl text-xs"
                             >
-                              <div className="flex items-center justify-between font-semibold text-red-700 mb-1.5">
+                              <div className="flex items-center justify-between font-semibold text-green-700">
                                 <div className="flex items-center space-x-2">
-                                  <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
-                                  <span>{timeLabel}</span>
+                                  <span>{appt.appointmentDate} at {timeLabel}</span>
                                 </div>
-                                <span className="text-[9px] uppercase font-extrabold tracking-wide text-red-500 bg-red-100/70 px-2 py-0.5 rounded-md">Reserved</span>
-                              </div>
-                              <div className="text-[11px] text-red-600 bg-red-50/50 p-1.5 rounded border border-red-100">
-                                <span className="font-bold">Reason:</span> {appt.reason || 'General Checkup'}
+                                <span className="text-[9px] uppercase font-extrabold tracking-wide text-green-700 bg-green-100/70 px-2 py-0.5 rounded-md">Reserved</span>
                               </div>
                             </div>
                           );
