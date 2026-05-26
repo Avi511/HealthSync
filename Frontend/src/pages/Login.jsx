@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -46,6 +47,18 @@ export default function Login() {
     }
   }, [successMessage, showSuccess, navigate, location.pathname]);
 
+  // Lock body scroll when loading overlay is active to prevent scrollbar issues
+  useEffect(() => {
+    if (isLoading || isVerifying) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isLoading, isVerifying]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -57,47 +70,65 @@ export default function Login() {
     }
 
     setIsLoading(true);
+    const startTime = Date.now();
+    let loginError = null;
+    let userData = null;
+
     try {
-      const [userData] = await Promise.all([
-        login(email, password),
-        new Promise(resolve => setTimeout(resolve, 4500))
-      ]);
-      setIsLoading(false);
+      userData = await login(email, password);
+    } catch (err) {
+      loginError = err;
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = 4500 - elapsedTime;
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+
+    setIsLoading(false);
+
+    if (loginError) {
+      if (typeof loginError === 'string' && loginError.includes('not verified')) {
+        setUnverifiedEmail(email);
+        setShowOtpModal(true);
+        showSuccess('Please check your email for the verification code.');
+      } else {
+        setError(loginError);
+        showError(loginError || 'Failed to sign in.');
+      }
+    } else {
+      setAuthenticatedUser(userData);
       showSuccess(`Welcome back, ${userData?.firstName || 'User'}! Successfully signed in.`);
       let redirectPath = '/';
       if (userData?.role === 'ADMIN') redirectPath = '/admin-dashboard';
       if (userData?.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
       navigate(redirectPath);
-    } catch (err) {
-      setIsLoading(false);
-      if (typeof err === 'string' && err.includes('not verified')) {
-        setUnverifiedEmail(email);
-        setShowOtpModal(true);
-        showSuccess('Please check your email for the verification code.');
-      } else {
-        setError(err);
-        showError(err || 'Failed to sign in.');
-      }
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    const startTime = Date.now();
+    let loginError = null;
+    let userData = null;
+
     try {
-      setIsLoading(true);
-      const [userData] = await Promise.all([
-        googleLoginUser(credentialResponse.credential),
-        new Promise(resolve => setTimeout(resolve, 4500))
-      ]);
-      setIsLoading(false);
-      setAuthenticatedUser(userData);
-      showSuccess(`Welcome, ${userData?.firstName || 'User'}! Successfully signed in via Google.`);
-      let redirectPath = '/';
-      if (userData?.role === 'ADMIN') redirectPath = '/admin-dashboard';
-      if (userData?.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
-      navigate(redirectPath);
+      userData = await googleLoginUser(credentialResponse.credential);
     } catch (err) {
-      setIsLoading(false);
-      const errMsg = err.response?.data?.message || err.message || err;
+      loginError = err;
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = 4500 - elapsedTime;
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+
+    setIsLoading(false);
+
+    if (loginError) {
+      const errMsg = loginError.response?.data?.message || loginError.message || loginError;
       if (typeof errMsg === 'string' && errMsg.includes('not verified')) {
         try {
           const decoded = jwtDecode(credentialResponse.credential);
@@ -111,6 +142,13 @@ export default function Login() {
         setError(errMsg);
         showError(errMsg || 'Google login failed.');
       }
+    } else {
+      setAuthenticatedUser(userData);
+      showSuccess(`Welcome, ${userData?.firstName || 'User'}! Successfully signed in via Google.`);
+      let redirectPath = '/';
+      if (userData?.role === 'ADMIN') redirectPath = '/admin-dashboard';
+      if (userData?.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
+      navigate(redirectPath);
     }
   };
 
@@ -120,12 +158,27 @@ export default function Login() {
       return;
     }
     setIsVerifying(true);
+    const startTime = Date.now();
+    let verifyError = null;
+    let userData = null;
+
     try {
-      const [userData] = await Promise.all([
-        verifyOtp(unverifiedEmail, otpCode),
-        new Promise(resolve => setTimeout(resolve, 4500))
-      ]);
-      setIsVerifying(false);
+      userData = await verifyOtp(unverifiedEmail, otpCode);
+    } catch (err) {
+      verifyError = err;
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = 4500 - elapsedTime;
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+
+    setIsVerifying(false);
+
+    if (verifyError) {
+      showError(verifyError.response?.data?.message || 'Invalid or expired OTP.');
+    } else {
       setShowOtpModal(false);
       setAuthenticatedUser(userData);
       showSuccess(`Email verified successfully! Welcome back, ${userData?.firstName || 'User'}!`);
@@ -133,9 +186,6 @@ export default function Login() {
       if (userData?.role === 'ADMIN') redirectPath = '/admin-dashboard';
       if (userData?.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
       navigate(redirectPath, { replace: true });
-    } catch (err) {
-      setIsVerifying(false);
-      showError(err.response?.data?.message || 'Invalid or expired OTP.');
     }
   };
 
@@ -150,6 +200,21 @@ export default function Login() {
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-white flex flex-col lg:flex-row overflow-hidden font-sans">
+      {(isLoading || isVerifying) && createPortal(
+        <div className="fixed inset-0 flex items-center justify-center bg-white/95 backdrop-blur-md z-[100] transition-all duration-300">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-72 h-72 sm:w-80 sm:h-80 md:w-[400px] md:h-[400px]">
+              <DotLottieReact
+                src="https://lottie.host/32036954-c36f-45b3-bdee-3c33a3f74f12/qDXRsm36Lj.lottie"
+                loop
+                autoplay
+                className="w-full h-full"
+              />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
       {/* Left Side: Lottie Animation (desktop only, hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-light/50 via-primary-light/20 to-white flex-col justify-center items-center p-12 relative">
         {/* Background Decorative Blur Blobs */}
@@ -323,7 +388,7 @@ export default function Login() {
                 shape="pill"
                 locale="en"
                 text="continue_with"
-                width="1500px"
+                width="400"
               />
             </div>
           </form>

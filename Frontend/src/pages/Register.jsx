@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -35,6 +36,18 @@ export default function Register() {
     }
   }, [isAuthenticated, user, navigate]);
 
+  // Lock body scroll when loading overlay is active to prevent scrollbar issues
+  useEffect(() => {
+    if (isLoading || isVerifying) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isLoading, isVerifying]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -63,44 +76,62 @@ export default function Register() {
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || 'User';
 
+    const startTime = Date.now();
+    let registerError = null;
+
     try {
-      await Promise.all([
-        register({
-          firstName,
-          lastName,
-          email,
-          phone,
-          address,
-          password,
-        }),
-        new Promise(resolve => setTimeout(resolve, 4500))
-      ]);
-      setIsLoading(false);
+      await register({
+        firstName,
+        lastName,
+        email,
+        phone,
+        address,
+        password,
+      });
+    } catch (err) {
+      registerError = err;
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = 4500 - elapsedTime;
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+
+    setIsLoading(false);
+
+    if (registerError) {
+      setError(registerError);
+      showError(registerError || 'Registration failed. Please try again.');
+    } else {
       showSuccess('Account registered successfully! Please check your email for the verification code.');
       setShowOtpModal(true);
-    } catch (err) {
-      setIsLoading(false);
-      setError(err);
-      showError(err || 'Registration failed. Please try again.');
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    setError('');
+    const startTime = Date.now();
+    let loginError = null;
+    let userData = null;
+
     try {
-      setIsLoading(true);
-      setError('');
-      const [userData] = await Promise.all([
-        googleLoginUser(credentialResponse.credential),
-        new Promise(resolve => setTimeout(resolve, 4500))
-      ]);
-      setIsLoading(false);
-      setAuthenticatedUser(userData);
-      showSuccess(`Welcome, ${userData?.firstName || 'User'}! Successfully signed in via Google.`);
-      const redirectPath = userData.role === 'ADMIN' ? '/admin-dashboard' : '/';
-      navigate(redirectPath);
+      userData = await googleLoginUser(credentialResponse.credential);
     } catch (err) {
-      setIsLoading(false);
-      const errMsg = err.response?.data?.message || err.message || err;
+      loginError = err;
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = 4500 - elapsedTime;
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+
+    setIsLoading(false);
+
+    if (loginError) {
+      const errMsg = loginError.response?.data?.message || loginError.message || loginError;
       if (typeof errMsg === 'string' && errMsg.includes('not verified')) {
         try {
           const decoded = jwtDecode(credentialResponse.credential);
@@ -114,6 +145,11 @@ export default function Register() {
         setError(errMsg);
         showError(errMsg || 'Google registration failed.');
       }
+    } else {
+      setAuthenticatedUser(userData);
+      showSuccess(`Welcome, ${userData?.firstName || 'User'}! Successfully signed in via Google.`);
+      const redirectPath = userData.role === 'ADMIN' ? '/admin-dashboard' : '/';
+      navigate(redirectPath);
     }
   };
 
@@ -123,20 +159,32 @@ export default function Register() {
       return;
     }
     setIsVerifying(true);
+    const startTime = Date.now();
+    let verifyError = null;
+    let userData = null;
+
     try {
-      const [userData] = await Promise.all([
-        verifyOtp(email, otpCode),
-        new Promise(resolve => setTimeout(resolve, 4500))
-      ]);
-      setIsVerifying(false);
+      userData = await verifyOtp(email, otpCode);
+    } catch (err) {
+      verifyError = err;
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = 4500 - elapsedTime;
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+
+    setIsVerifying(false);
+
+    if (verifyError) {
+      showError(verifyError.response?.data?.message || 'Invalid or expired OTP.');
+    } else {
       setShowOtpModal(false);
       setAuthenticatedUser(userData);
       showSuccess('Email verified successfully! Logged in.');
       const redirectPath = userData.role === 'ADMIN' ? '/admin-dashboard' : '/';
       navigate(redirectPath, { replace: true });
-    } catch (err) {
-      setIsVerifying(false);
-      showError(err.response?.data?.message || 'Invalid or expired OTP.');
     }
   };
 
@@ -151,6 +199,21 @@ export default function Register() {
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-white flex flex-col lg:flex-row overflow-hidden font-sans">
+      {(isLoading || isVerifying) && createPortal(
+        <div className="fixed inset-0 flex items-center justify-center bg-white/95 backdrop-blur-md z-[100] transition-all duration-300">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-72 h-72 sm:w-80 sm:h-80 md:w-[400px] md:h-[400px]">
+              <DotLottieReact
+                src="https://lottie.host/32036954-c36f-45b3-bdee-3c33a3f74f12/qDXRsm36Lj.lottie"
+                loop
+                autoplay
+                className="w-full h-full"
+              />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
       {/* Left Side: Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-start pt-6 lg:pt-12 pb-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white relative order-2 lg:order-1">
         <div className="max-w-md w-full mx-auto space-y-8">
@@ -402,7 +465,7 @@ export default function Register() {
                 shape="pill"
                 locale="en"
                 text="continue_with"
-                width="1500px"
+                width="400"
               />
             </div>
           </form>

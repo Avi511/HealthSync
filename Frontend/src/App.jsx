@@ -18,11 +18,12 @@ function App() {
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-        <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96">
+        <div className="w-72 h-72 sm:w-80 sm:h-80 md:w-[400px] md:h-[400px]">
           <DotLottieReact
             src="https://lottie.host/32036954-c36f-45b3-bdee-3c33a3f74f12/qDXRsm36Lj.lottie"
             loop
             autoplay
+            className="w-full h-full"
           />
         </div>
       </div>

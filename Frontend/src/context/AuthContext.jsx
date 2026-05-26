@@ -22,8 +22,6 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const data = await loginUser({ email, password });
-      setUser(data);
-      localStorage.setItem('healthsync_user', JSON.stringify(data));
       return data;
     } catch (error) {
       throw error.response?.data?.message || 'Login failed. Please try again.';
