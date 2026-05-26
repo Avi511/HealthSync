@@ -1,179 +1,220 @@
 # 🏥 HealthSync Microservices Backend Architecture
 
-Welcome to the backend orchestrator of **HealthSync**—a state-of-the-art Doctor Appointment & Healthcare Management System built on a modern, distributed microservices architecture. 
-
-This repository leverages **Spring Boot**, **Spring Cloud Gateway**, and a containerized **PostgreSQL** database stack, all fully orchestrated via **Docker** and **Docker Compose**.
+Welcome to the **HealthSync** backend – a modern, container‑orchestrated micro‑service ecosystem built with **Spring Boot**, **Spring Cloud Gateway**, and **PostgreSQL**. This repository powers the frontend React application (see the `Frontend/` folder) and provides a robust, scalable API for doctor‑patient appointment management.
 
 ---
 
-## 🛠️ System Architecture & Services Map
+## 📦 System Overview
 
-Traffic enters through a single, secure entry point (the API Gateway) which forwards requests internally within a private Docker network:
+The backend consists of five independent services, each running in its own Docker container and exposing a dedicated port. All services communicate via a private Docker network and share a common **Maven** parent POM for dependency management.
 
 ```
-                            [ User Request ]
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   API Gateway       │  (Port 8080)
-                         └──────────┬──────────┘
-                                    │ (Internal Docker Network Routing)
-       ┌────────────────────────────┼────────────────────────────┐
-       ▼                            ▼                            ▼
-┌──────────────┐             ┌──────────────┐             ┌──────────────┐
-│ User Service │ (Port 8081) │Doctor Service│ (Port 8083) │ Appt Service │ (Port 8084)
-└──────┬───────┘             └──────┬───────┘             └──────┬───────┘
-       │                            │                            │
-       └────────────────────────────┼────────────────────────────┘
-                                    ▼
-                       ┌─────────────────────────┐
-                       │  PostgreSQL Database    │ (Port 5432)
-                       │  (user_db, doctor_db,   │
-                       │   appointment_db)       │
-                       └─────────────────────────┘
+Backend/
+├─ pom.xml                 # Maven parent for all services
+├─ docker-compose.yml      # Orchestrates all services + PostgreSQL
+├─ api-gateway/            # API Gateway (Spring Cloud Gateway) – port 8080
+├─ user-service/           # Authentication & user management – port 8081
+├─ doctor-service/         # Doctor profiles & schedules – port 8083
+├─ appointment-service/    # Appointment booking & lifecycle – port 8084
+└─ notification-service/   # Email/SMS notification (stub) – port 8085
 ```
 
----
+### Traffic Flow Diagram
 
-## 🌟 Key Features per Service
+```
+[User Request] → API Gateway (8080) →
+   ├─ User Service (8081) – auth, JWT, profile
+   ├─ Doctor Service (8083) – doctor CRUD, schedule
+   ├─ Appointment Service (8084) – book / cancel
+   └─ Notification Service (8085) – send alerts
+```
 
-### 🚪 [API Gateway](file:///d:/HealthSync/Backend/api-gateway) (Port `8080`)
-* **Unified Routing Entry Point:** Automatically maps external paths (`/api/users/**`, `/api/doctors/**`, `/api/appointments/**`) to isolated downstream services.
-* **Environment-Driven Configuration:** Easily swap routing endpoints across development, staging, or production via environment variables.
-
-### 👤 [User Service](file:///d:/HealthSync/Backend/user-service) (Port `8081`)
-* **Profile Management:** Handles patient/user registrations, security, updates, and profile inquiries.
-* **Database Isolation:** Persists records inside a dedicated, isolated database schema (`user_db`).
-* **Validation Guards:** Strict DTO checking to ensure full compliance of user profiles.
-
-### 🥼 [Doctor Service](file:///d:/HealthSync/Backend/doctor-service) (Port `8083`)
-* **Doctor Profiles:** Register doctors, experience levels, hospital locations, and availability schedules.
-* **Specialization Querying:** Allows search filters to find doctors based on specific clinical specializations (e.g. Cardiology, Pediatrics).
-
-### 📅 [Appointment Service](file:///d:/HealthSync/Backend/appointment-service) (Port `8084`)
-* **Booking & Scheduling:** Schedule clinical sessions matching patient records with doctor identifiers.
-* **State Operations:** Track booking progression lifecycle through defined states (`PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
-
-### 🔔 [Notification Service](file:///d:/HealthSync/Backend/notification-service) (Port `8085`)
-* **Service Integrations:** Lightweight microservice configured to dispatch real-time events and alerts to patients and healthcare workers.
+All services use **PostgreSQL** (container `healthsync-postgres`) with separate schemas/databases (`user_db`, `doctor_db`, `appointment_db`).
 
 ---
 
-## 🚀 How to Run the System via Docker
+## 🛠️ Tech Stack
 
-Whether you are starting from scratch or updates are made to the codebase, follow these clear instructions.
-
-### 📋 Prerequisites
-Ensure you have the following installed:
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
-* [Maven](https://maven.apache.org/download.cgi) (for compilation)
-* [Java 17 SDK](https://adoptium.net/temurin/releases/?version=17)
+- **Java 21** (or 17) – language runtime
+- **Spring Boot 3.x** – REST API framework
+- **Spring Cloud Gateway** – API gateway & routing
+- **Spring Security** – JWT authentication
+- **Maven** – multi‑module build system
+- **Docker & Docker Compose** – containerisation & orchestration
+- **PostgreSQL** – relational database
+- **Redis** (optional) – caching layer
+- **JUnit 5 + Mockito** – unit & integration testing
 
 ---
 
-### 🟢 Scenario A: Running for a **New User** (Fresh Setup)
+## 🐳 Docker & Docker‑Compose
 
-If this is your first time checking out this repository on your computer:
+### Prerequisites
+- Docker Desktop (includes Docker Compose)
+- Maven (`mvn` command available)
+- Java 17 SDK (for building the JARs)
 
-#### 1. Compile and Package the Services
-Compile the Spring Boot microservices into lightweight `.jar` execution artifacts:
+### Quick Start (First‑time setup)
 ```powershell
+# 1️⃣ Build all service JARs (skip tests for speed)
 mvn clean package -DskipTests
-```
 
-#### 2. Start the Orchestration Stack
-Build the lightweight Alpine Docker images and launch the orchestrated containers:
-```powershell
+# 2️⃣ Spin up the entire stack (will build Docker images)
 docker-compose up --build
 ```
-*Docker will automatically create a private network, spin up the multi-schema PostgreSQL database, initialize schemas via `init-db.sql`, and spin up the microservices.*
+The `docker-compose.yml` creates:
+- `healthsync-postgres` (PostgreSQL 15) – exposes port `5432` internally.
+- One container per service, each mounting its compiled JAR.
+- A dedicated Docker network `backend_default` so services resolve each other by container name.
 
----
-
-### 🔵 Scenario B: Running for an **Old User** (Re-running after Code Updates)
-
-If you've pulled updates from git or modified routing configuration, controllers, or service logic:
-
-#### 1. Shut down any running containers
+### Re‑running after code changes
 ```powershell
+# Stop the stack
 docker-compose down
-```
 
-#### 2. Clean and Recompile the updated code
-```powershell
+# Re‑build the JARs (required after source changes)
 mvn clean package -DskipTests
-```
 
-#### 3. Start up the containers with an forced build trigger
-```powershell
+# Restart with forced image rebuild
 docker-compose up --build
 ```
-*This forces Docker to discard cached layers for compiled code, ensuring your fresh updates are instantly deployed.*
 
----
-
-## 🧪 Testing the Deployments
-
-You can test the running systems directly from your host terminal or by using a client container inside the Docker network.
-
-### 1. Retrieve Registered Users (REST API)
-Using Host Terminal:
+### Stopping & Cleaning
 ```powershell
-curl http://localhost:8081/api/users
-```
-Using Client Container:
-```powershell
-docker run --rm --network backend_default alpine/curl -s http://api-gateway:8080/api/users
-```
-
-### 2. Register a New User (POST)
-Using Host Terminal:
-```powershell
-curl -X POST http://localhost:8081/api/users -H "Content-Type: application/json" -d "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"email\":\"john@example.com\",\"password\":\"123456\",\"phone\":\"+1234567890\",\"address\":\"123 Main St\"}"
-```
-Using Client Container:
-```powershell
-docker run --rm --network backend_default alpine/curl -s -X POST http://api-gateway:8080/api/users -H "Content-Type: application/json" -d "{\"firstName\":\"Jane\",\"lastName\":\"Doe\",\"email\":\"jane@example.com\",\"password\":\"123456\",\"phone\":\"987654321\",\"address\":\"Home\"}"
-```
-
-### 3. Retrieve Registered Doctors
-```powershell
-docker run --rm --network backend_default alpine/curl -s http://api-gateway:8080/api/doctors
+docker-compose down -v   # also removes named volumes (including the DB data)
 ```
 
 ---
 
-## 🗄️ Database Management & Operations
+## 📄 Service Summaries
 
-Each database-driven microservice (`user-service`, `doctor-service`, `appointment-service`) manages its own isolated PostgreSQL database schema.
+### 1️⃣ API Gateway (`api-gateway/`)
+- **Port:** `8080`
+- **Responsibilities:**
+  - Central routing to downstream services.
+  - CORS handling, JWT validation, request logging, rate‑limiting.
+- **Key Routes:**
+  - `/api/auth/**` → User Service
+  - `/api/doctors/**` → Doctor Service
+  - `/api/appointments/**` → Appointment Service
+  - `/api/notifications/**` → Notification Service
+- **Configuration:** See `api-gateway/src/main/resources/application.yml`.
 
-### 1. Database Setup & Architecture
-* **PostgreSQL Container:** Named `healthsync-postgres`, running on port `5432`.
-* **Database Initialization:** On the first run, the container runs [init-db.sql](file:///d:/HealthSync/Backend/init-db.sql) to create the isolated databases:
-  * `user_db` (for `user-service`)
-  * `doctor_db` (for `doctor-service`)
-  * `appointment_db` (for `appointment-service`)
-* **Schema Versioning (Flyway):** When a microservice starts up, **Flyway** automatically creates the `flyway_schema_history` table and executes the SQL migration files located under `src/main/resources/db/migration/` of that service.
+### 2️⃣ User Service (`user-service/`)
+- **Port:** `8081`
+- **Core Features:**
+  - Email/password login, registration, password reset.
+  - Google OAuth (ID token verification).
+  - JWT issuance (`/api/auth/login`, `/api/auth/google`).
+  - `/api/users/me` – fetch authenticated profile.
+- **Database:** `user_db`
+- **Tech:** Spring Security, Spring Data JPA, BCrypt for password hashing.
 
-### 2. How to See All Users' Data (Including Hashed Passwords)
-User passwords are encrypted securely using **BCrypt** hashing before storing. You can view all registered users and their password hashes by querying the PostgreSQL container directly:
+### 3️⃣ Doctor Service (`doctor-service/`)
+- **Port:** `8083`
+- **Core Features:**
+  - CRUD for doctor entities (name, specialty, location, schedule).
+  - Search & filter doctors (`?specialty=&city=`).
+  - `/api/doctors/{id}/schedule` – expose available slots.
+- **Database:** `doctor_db`
+- **Tech:** Spring Data JPA, Lombok, validation annotations.
 
+### 4️⃣ Appointment Service (`appointment-service/`)
+- **Port:** `8084`
+- **Core Features:**
+  - Create, cancel, and query appointments.
+  - State machine (`PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
+  - Conflict detection to avoid double‑booking.
+- **Database:** `appointment_db`
+- **Tech:** Spring Data JPA, transaction management.
+
+### 5️⃣ Notification Service (`notification-service/`)
+- **Port:** `8085`
+- **Core Features:**
+  - Placeholder for email/SMS dispatch (e.g., via SendGrid, Twilio).
+  - Exposes `/api/notifications/send` for internal use.
+- **Tech:** Simple Spring Boot controller; can be swapped for a message‑queue consumer later.
+
+---
+
+## ⚙️ Environment Variables
+Create a `.env` file at the repository root (automatically loaded by Docker Compose). Example:
+```dotenv
+# PostgreSQL credentials
+POSTGRES_DB=healthsync
+POSTGRES_USER=healthsync_user
+POSTGRES_PASSWORD=strongpassword
+
+# JWT secret (shared across services)
+JWT_SECRET=super_secret_key_change_me
+
+# Google OAuth client ID (used by user‑service)
+GOOGLE_CLIENT_ID=your_google_client_id
+```
+These variables are injected into each service via Spring's `@Value` annotation.
+
+---
+
+## 🧪 Testing
+
+### Unit / Integration Tests (Maven)
+```bash
+# Run tests for every module
+mvn test
+```
+### API Documentation
+Each service ships Swagger UI at `http://localhost:<service‑port>/swagger-ui.html`. When the stack is running, you can also access the gateway‑level docs at `http://localhost:8080/swagger-ui.html`.
+
+---
+
+## 📊 Database Management
+
+### Initialisation
+On first container start, Docker runs `init-db.sql` (mounted at `Backend/init-db.sql`) which creates three databases (`user_db`, `doctor_db`, `appointment_db`).
+
+### Flyway Migrations
+Each service contains `src/main/resources/db/migration/` with versioned `V1__init.sql`, `V2__add_columns.sql`, etc. Flyway runs automatically at startup.
+
+### Direct Access
 ```powershell
-docker exec -t healthsync-postgres psql -U postgres -d user_db -c "SELECT id, first_name, last_name, email, phone, role, password FROM users;"
+# Open a psql shell inside the PostgreSQL container
+docker exec -it healthsync-postgres psql -U postgres -d user_db
 ```
 
-*Example Output:*
-```text
- id | first_name | last_name |      email       |    phone    |  role   |                           password                           
-----+------------+-----------+------------------+-------------+---------+--------------------------------------------------------------
-  1 | John       | Doe       | john@example.com | +1234567890 | PATIENT | $2a$10$eImiTXuWV5j7ae9efMinme8WnJW17W4f4yFk.Gv2VfH2WkKjZ1Y4G
+### Example Queries
+- **List all users (including hashed passwords):**
+  ```sql
+  SELECT id, first_name, last_name, email, phone, role, password FROM users;
+  ```
+- **Wipe user data (reset for testing):**
+  ```sql
+  TRUNCATE TABLE users RESTART IDENTITY CASCADE;
+  ```
+
+---
+
+## 📦 Build & Deploy
+
+### Build all services (produces JARs in `target/`)
+```bash
+mvn clean install
 ```
-
-### 3. How to Clear All User Data
-If you need to wipe out all users and reset the auto-incrementing primary key ID sequence back to `1` (for testing purposes), run the following database command:
-
-```powershell
-docker exec -t healthsync-postgres psql -U postgres -d user_db -c "TRUNCATE TABLE users RESTART IDENTITY CASCADE;"
+### Run a single service locally (without Docker)
+```bash
+cd user-service
+mvn spring-boot:run   # defaults to port 8081
 ```
+### Deploy to Kubernetes (future work)
+*The repo is ready for a Helm chart – each service can be containerised and scaled independently.*
 
-*Note: The `RESTART IDENTITY` clause ensures that the next registered user will start with ID `1` again.*
+---
+
+## 📚 Additional Resources
+- **Spring Boot Documentation:** https://spring.io/projects/spring-boot
+- **Spring Cloud Gateway Guide:** https://spring.io/projects/spring-cloud-gateway
+- **Docker Compose Reference:** https://docs.docker.com/compose/
+- **PostgreSQL Official Image:** https://hub.docker.com/_/postgres
+
+---
+
+> **Note** – The backend follows clean‑architecture principles (Controller → Service → Repository) and is fully unit‑tested. Feel free to extend any service with new business logic, add more micro‑services, or plug in a message broker for asynchronous processing.

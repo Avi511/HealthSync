@@ -1,32 +1,41 @@
-# 👤 HealthSync - User Service
+# User Service
 
-The User Service handles user registrations, user records management, and profiles validation inside the HealthSync application.
+## Overview
+The **User Service** handles authentication, user registration, password management, and Google OAuth verification. It stores user data in a PostgreSQL database and issues JWT tokens for the frontend to authenticate subsequent requests.
+
+## Key Endpoints
+- `POST /api/auth/login` – email/password login, returns JWT.
+- `POST /api/auth/register` – creates a new user, sends verification email.
+- `POST /api/auth/google` – verifies Google ID token and logs the user in.
+- `GET /api/users/me` – returns the authenticated user's profile.
+
+## Tech Stack
+- **Spring Boot 3.x**
+- **Spring Security** – JWT authentication
+- **Spring Data JPA** – PostgreSQL persistence
+- **Java JWT** – token generation/validation
+- **Lombok** – boilerplate reduction
+
+## Build & Run
+```bash
+cd user-service
+mvn clean install
+mvn spring-boot:run   # runs on http://localhost:8081 by default
+```
+
+## Environment Variables
+```
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/healthsync
+SPRING_DATASOURCE_USERNAME=healthsync_user
+SPRING_DATASOURCE_PASSWORD=strongpassword
+JWT_SECRET=your_jwt_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+```
+
+## Testing
+```bash
+mvn test   # runs unit & integration tests
+```
 
 ---
-
-## ⚙️ Features
-* **User Profile Creation:** Handles registration requests with secure password stubbing.
-* **User Login Validation:** Verifies user credentials (email and password) to authenticate active sessions.
-* **Input Validation:** Enforces requirements for matching email structures, non-blank strings, and robust inputs.
-* **Hibernate JPA Persistence:** Integrates with the database layer using dynamic query generation.
-
----
-
-## 🔌 Configuration
-* **Container Name:** `user-service`
-* **Local Exposed Port:** `8081`
-* **Isolated Database Schema:** `user_db`
-* **Technology Stack:** Spring Boot, Spring Data JPA, Lombok, PostgreSQL Driver
-
----
-
-## 🛣️ API Endpoint Mappings
-
-| Method | Endpoint | Description | Payload (Request) |
-| :--- | :--- | :--- | :--- |
-| **POST** | `/api/users` | Register a new user profile | JSON containing fields: `firstName`, `lastName`, `email`, `password`, `phone`, `address` |
-| **POST** | `/api/users/login` | Authenticate and log in a user | JSON containing fields: `email`, `password` |
-| **GET** | `/api/users` | Fetch list of all registered users | None |
-| **GET** | `/api/users/{id}`| Fetch a single user profile | ID Path Parameter |
-| **PUT** | `/api/users/{id}`| Update user details | JSON with updated fields |
-| **DELETE**| `/api/users/{id}`| Delete a user profile | ID Path Parameter |
+> The service adheres to clean‑architecture principles: Controllers → Services → Repositories.
