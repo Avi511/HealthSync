@@ -27,14 +27,37 @@ export default function Home() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/health.sync.26@gmail.com", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject || 'HealthSync Contact Form',
+          message: formData.message,
+          _subject: 'New submission from HealthSync Contact Page!'
+        })
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        console.error("Form submission failed");
+      }
+    } catch (error) {
+      console.error("Error submitting form", error);
+    } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
-    }, 1200);
+    }
   };
 
   const handleResetForm = () => {
@@ -115,7 +138,7 @@ export default function Home() {
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
                 </span>
                 <span className="text-xs font-semibold text-primary tracking-wide uppercase">
-                  Seamless Healthcare Solutions
+                  Welcome to HealthSync - Your Digital Health Companion
                 </span>
               </div>
 
@@ -290,7 +313,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-black">Email Us</h4>
-                  <p className="text-sm text-gray-600">support@healthsync.com</p>
+                  <p className="text-sm text-gray-600">health.sync.26@gmail.com</p>
                   <p className="text-xs text-gray-400 font-light">Expect replies within 24 hours.</p>
                 </div>
               </div>
@@ -303,8 +326,8 @@ export default function Home() {
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-black">Call Support</h4>
-                  <p className="text-sm text-gray-600">+1 (555) 019-2834</p>
-                  <p className="text-xs text-gray-400 font-light">Toll-free, Mon-Fri 8:00 AM - 6:00 PM PST</p>
+                  <p className="text-sm text-gray-600">0776599189</p>
+                  <p className="text-xs text-gray-400 font-light">Mon-Fri 8:00 AM - 6:00 PM</p>
                 </div>
               </div>
 
@@ -317,8 +340,8 @@ export default function Home() {
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-black">Headquarters</h4>
-                  <p className="text-sm text-gray-600">123 Medical Center Way, Suite 400</p>
-                  <p className="text-xs text-gray-400 font-light">San Francisco, CA 94107</p>
+                  <p className="text-sm text-gray-600">171, Dharmashoka Mawatha</p>
+                  <p className="text-xs text-gray-400 font-light">Lewalla, Kandy</p>
                 </div>
               </div>
             </div>

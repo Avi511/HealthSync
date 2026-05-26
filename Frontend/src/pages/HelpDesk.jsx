@@ -31,14 +31,39 @@ export default function HelpDesk() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.subject || !formData.description) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/health.sync.26@gmail.com", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          category: formData.category,
+          priority: formData.priority,
+          subject: formData.subject,
+          description: formData.description,
+          _subject: `New Help Desk Ticket from ${formData.name}`
+        })
+      });
+
+      if (response.ok) {
+        setTicketId(`HSK-${Math.floor(100000 + Math.random() * 900000)}`);
+      } else {
+        console.error("Form submission failed");
+      }
+    } catch (error) {
+      console.error("Error submitting form", error);
+    } finally {
       setIsSubmitting(false);
-      setTicketId(`HSK-${Math.floor(100000 + Math.random() * 900000)}`);
-    }, 1500);
+    }
   };
 
   const handleReset = () => {

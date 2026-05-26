@@ -18,4 +18,5 @@ public class DoctorResponse {
     private String stage;
     private String phone;
     private String availability;
+    private String password;
 }

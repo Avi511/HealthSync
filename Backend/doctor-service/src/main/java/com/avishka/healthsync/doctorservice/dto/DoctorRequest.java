@@ -27,4 +27,6 @@ public class DoctorRequest {
     private String phone;
 
     private String availability;
+
+    private String password;
 }

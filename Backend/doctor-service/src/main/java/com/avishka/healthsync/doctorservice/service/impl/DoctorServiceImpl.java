@@ -68,6 +68,9 @@ public class DoctorServiceImpl implements DoctorService {
         doctor.setStage(request.getStage());
         doctor.setPhone(request.getPhone());
         doctor.setAvailability(request.getAvailability());
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            doctor.setPassword(request.getPassword());
+        }
 
         Doctor updatedDoctor = doctorRepository.save(doctor);
 

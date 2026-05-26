@@ -45,14 +45,11 @@ export default function AdminDashboard() {
     experience: '',
     stage: 'MO',
     phone: '',
-    availability: 'Available'
+    availability: 'Available',
+    password: ''
   });
 
   const { showSuccess, showError } = useToast();
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -70,6 +67,11 @@ export default function AdminDashboard() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+    fetchData();
+  }, []);
 
   // User Actions
   const handleOpenUserModal = (user = null) => {
@@ -146,7 +148,8 @@ export default function AdminDashboard() {
         experience: doctor.experience,
         stage: doctor.stage || 'MO',
         phone: doctor.phone || '',
-        availability: doctor.availability || 'Available'
+        availability: doctor.availability || 'Available',
+        password: ''
       });
     } else {
       setSelectedDoctor(null);
@@ -158,7 +161,8 @@ export default function AdminDashboard() {
         experience: '',
         stage: 'MO',
         phone: '',
-        availability: 'Available'
+        availability: 'Available',
+        password: ''
       });
     }
     setShowDoctorModal(true);
@@ -170,6 +174,9 @@ export default function AdminDashboard() {
       ...doctorForm,
       experience: parseInt(doctorForm.experience) || 0
     };
+    if (!payload.password) {
+      delete payload.password;
+    }
     try {
       if (selectedDoctor) {
         await updateDoctor(selectedDoctor.id, payload);
@@ -177,6 +184,29 @@ export default function AdminDashboard() {
       } else {
         await createDoctor(payload);
         showSuccess(`Doctor '${doctorForm.fullName}' added successfully.`);
+        
+        // Also create a user account for this doctor to login
+        if (payload.password && payload.email) {
+          try {
+            const nameParts = doctorForm.fullName.split(' ');
+            const firstName = nameParts[0] || 'Doctor';
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+            
+            await createUser({
+              firstName,
+              lastName,
+              email: doctorForm.email,
+              password: payload.password,
+              phone: doctorForm.phone || '',
+              address: doctorForm.hospital || '',
+              role: 'DOCTOR'
+            });
+            showSuccess(`User account created for Dr. ${lastName || firstName}.`);
+          } catch (userErr) {
+            console.error('Failed to create user account for doctor', userErr);
+            showError('Doctor added, but failed to create login account.');
+          }
+        }
       }
       setShowDoctorModal(false);
       fetchData();
@@ -525,7 +555,7 @@ export default function AdminDashboard() {
 
       {/* User Add/Edit Modal */}
       {showUserModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-start justify-center p-4 pt-10 sm:pt-16">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 relative shadow-2xl animate-[fadeIn_0.2s_ease-out]">
             <h3 className="text-xl font-bold text-slate-900">
               {selectedUser ? 'Edit User Attributes' : 'Create New System User'}
@@ -635,7 +665,7 @@ export default function AdminDashboard() {
 
       {/* Doctor Add/Edit Modal */}
       {showDoctorModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-start justify-center p-4 pt-10 sm:pt-16">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 relative shadow-2xl animate-[fadeIn_0.2s_ease-out]">
             <h3 className="text-xl font-bold text-slate-900">
               {selectedDoctor ? 'Edit Doctor Record' : 'Register Doctor in Directory'}
@@ -742,6 +772,18 @@ export default function AdminDashboard() {
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 block">Password {selectedDoctor && '(leave blank to keep unchanged)'}</label>
+                <input
+                  type="password"
+                  required={!selectedDoctor}
+                  value={doctorForm.password}
+                  onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
+                  placeholder="Enter doctor password"
+                  className="w-full bg-slate-50 text-sm border border-slate-200 px-4 py-2.5 rounded-xl outline-none text-black transition-all focus:bg-white focus:border-primary"
+                />
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -764,7 +806,7 @@ export default function AdminDashboard() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center p-4 pt-10 sm:pt-16">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl animate-[scaleIn_0.15s_ease-out]">
             <div className="flex items-center space-x-3 text-red-600">
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

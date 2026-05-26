@@ -17,6 +17,7 @@ public class DoctorMapper {
                 .stage(request.getStage())
                 .phone(request.getPhone())
                 .availability(request.getAvailability())
+                .password(request.getPassword())
                 .build();
     }
 
@@ -32,6 +33,7 @@ public class DoctorMapper {
                 .stage(doctor.getStage())
                 .phone(doctor.getPhone())
                 .availability(doctor.getAvailability())
+                .password(doctor.getPassword())
                 .build();
     }
 }
