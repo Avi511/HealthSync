@@ -212,6 +212,7 @@ public class UserServiceImpl implements UserService {
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
                 .stream()
+                .sorted((u1, u2) -> u1.getId().compareTo(u2.getId()))
                 .map(UserMapper::toResponse)
                 .toList();
     }

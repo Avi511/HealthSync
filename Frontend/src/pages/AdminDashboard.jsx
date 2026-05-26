@@ -266,18 +266,22 @@ export default function AdminDashboard() {
   };
 
   // Filtered lists
-  const filteredUsers = users.filter(user => {
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-    const query = userSearch.toLowerCase();
-    return fullName.includes(query) || user.email.toLowerCase().includes(query) || user.role.toLowerCase().includes(query);
-  });
+  const filteredUsers = users
+    .filter(user => {
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+      const query = userSearch.toLowerCase();
+      return fullName.includes(query) || user.email.toLowerCase().includes(query) || user.role.toLowerCase().includes(query);
+    })
+    .sort((a, b) => a.id - b.id);
 
-  const filteredDoctors = doctors.filter(doc => {
-    const query = doctorSearch.toLowerCase();
-    return doc.fullName.toLowerCase().includes(query) || 
-           doc.specialization.toLowerCase().includes(query) || 
-           doc.hospital.toLowerCase().includes(query);
-  });
+  const filteredDoctors = doctors
+    .filter(doc => {
+      const query = doctorSearch.toLowerCase();
+      return doc.fullName.toLowerCase().includes(query) || 
+             doc.specialization.toLowerCase().includes(query) || 
+             doc.hospital.toLowerCase().includes(query);
+    })
+    .sort((a, b) => a.id - b.id);
 
   // Role pill styles
   const getRoleBadge = (role) => {

@@ -58,7 +58,10 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const userData = await login(email, password);
+      const [userData] = await Promise.all([
+        login(email, password),
+        new Promise(resolve => setTimeout(resolve, 4500))
+      ]);
       setIsLoading(false);
       showSuccess(`Welcome back, ${userData?.firstName || 'User'}! Successfully signed in.`);
       let redirectPath = '/';
@@ -81,7 +84,10 @@ export default function Login() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setIsLoading(true);
-      const userData = await googleLoginUser(credentialResponse.credential);
+      const [userData] = await Promise.all([
+        googleLoginUser(credentialResponse.credential),
+        new Promise(resolve => setTimeout(resolve, 4500))
+      ]);
       setIsLoading(false);
       setAuthenticatedUser(userData);
       showSuccess(`Welcome, ${userData?.firstName || 'User'}! Successfully signed in via Google.`);
@@ -98,7 +104,7 @@ export default function Login() {
           setUnverifiedEmail(decoded.email);
           setShowOtpModal(true);
           showSuccess('Account created! Please verify your email with the OTP sent.');
-        } catch(e) {
+        } catch (e) {
           showError('Could not decode Google token email.');
         }
       } else {
@@ -115,7 +121,10 @@ export default function Login() {
     }
     setIsVerifying(true);
     try {
-      const userData = await verifyOtp(unverifiedEmail, otpCode);
+      const [userData] = await Promise.all([
+        verifyOtp(unverifiedEmail, otpCode),
+        new Promise(resolve => setTimeout(resolve, 4500))
+      ]);
       setIsVerifying(false);
       setShowOtpModal(false);
       setAuthenticatedUser(userData);
@@ -281,9 +290,8 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-4 px-6 rounded-2xl text-sm font-semibold tracking-wide text-white bg-primary hover:bg-primary-dark transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 cursor-pointer ${
-                isLoading ? 'opacity-80 pointer-events-none' : ''
-              }`}
+              className={`w-full py-4 px-6 rounded-2xl text-sm font-semibold tracking-wide text-white bg-primary hover:bg-primary-dark transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 cursor-pointer ${isLoading ? 'opacity-80 pointer-events-none' : ''
+                }`}
             >
               {isLoading ? (
                 <>
@@ -297,7 +305,7 @@ export default function Login() {
                 <span>Sign In</span>
               )}
             </button>
-            
+
             <div className="relative flex items-center justify-center mt-6">
               <span className="absolute bg-white px-2 text-xs text-gray-500">Or continue with</span>
               <div className="w-full border-t border-gray-200"></div>
@@ -312,8 +320,10 @@ export default function Login() {
                 useOneTap
                 theme="outline"
                 size="large"
-                shape="rectangular"
-                width="100%"
+                shape="pill"
+                locale="en"
+                text="continue_with"
+                width="1500px"
               />
             </div>
           </form>
@@ -333,8 +343,8 @@ export default function Login() {
       {/* OTP Modal Overlay */}
       {showOtpModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm overflow-y-auto p-4 sm:p-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative my-auto">
-            <button 
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative mt-6 sm:mt-12 mb-8">
+            <button
               onClick={() => setShowOtpModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
             >
@@ -342,7 +352,7 @@ export default function Login() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            
+
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-primary-light/20 text-primary rounded-full flex items-center justify-center mx-auto mb-2">
                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
@@ -351,9 +361,9 @@ export default function Login() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900">Verify Email</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                We've sent a 6-digit verification code to <br/><span className="font-semibold text-gray-800">{unverifiedEmail}</span>.
+                We've sent a 6-digit verification code to <br /><span className="font-semibold text-gray-800">{unverifiedEmail}</span>.
               </p>
-              
+
               <div className="pt-4 space-y-4">
                 <input
                   type="text"
@@ -363,17 +373,16 @@ export default function Login() {
                   onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
                   className="w-full text-center text-3xl tracking-[0.5em] font-mono font-bold bg-gray-50 border border-gray-200 py-4 rounded-xl outline-none text-black transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
-                
+
                 <button
                   onClick={handleVerifyOtp}
                   disabled={isVerifying || otpCode.length !== 6}
-                  className={`w-full py-4 rounded-xl text-sm font-semibold tracking-wide text-white bg-primary hover:bg-primary-dark transition-all duration-200 shadow-sm ${
-                    isVerifying || otpCode.length !== 6 ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-full py-4 rounded-xl text-sm font-semibold tracking-wide text-white bg-primary hover:bg-primary-dark transition-all duration-200 shadow-sm ${isVerifying || otpCode.length !== 6 ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
                 >
                   {isVerifying ? 'Verifying...' : 'Verify Code'}
                 </button>
-                
+
                 <p className="text-xs text-gray-500 font-medium">
                   Didn't receive it?{' '}
                   <button onClick={handleResendOtp} className="text-primary hover:underline font-semibold">

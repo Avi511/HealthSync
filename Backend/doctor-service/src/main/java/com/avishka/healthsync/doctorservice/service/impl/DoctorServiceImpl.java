@@ -32,6 +32,7 @@ public class DoctorServiceImpl implements DoctorService {
 
         return doctorRepository.findAll()
                 .stream()
+                .sorted((d1, d2) -> d1.getId().compareTo(d2.getId()))
                 .map(DoctorMapper::toResponse)
                 .toList();
     }
