@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,7 @@ export default function Login() {
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const hasShownToast = useRef(false);
 
   const successMessage = location.state?.successMessage;
 
@@ -29,7 +30,8 @@ export default function Login() {
   }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
-    if (successMessage) {
+    if (successMessage && !hasShownToast.current) {
+      hasShownToast.current = true;
       showSuccess(successMessage);
       // Clear location state to avoid showing toast repeatedly on reload
       navigate(location.pathname, { replace: true, state: {} });

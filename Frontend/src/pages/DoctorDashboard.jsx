@@ -166,7 +166,7 @@ export default function DoctorDashboard() {
                       <div className="font-semibold">{appt.timeSlot}</div>
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-600 max-w-xs truncate">
-                      {appt.notes || "-"}
+                      {appt.reason || "-"}
                     </td>
                     <td className="py-4 px-4 text-sm">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${appt.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
