@@ -40,6 +40,13 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.getDoctorById(id));
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<DoctorResponse> getDoctorByEmail(
+            @PathVariable String email
+    ) {
+        return ResponseEntity.ok(doctorService.getDoctorByEmail(email));
+    }
+
     @GetMapping("/specialization/{specialization}")
     public ResponseEntity<List<DoctorResponse>> getDoctorsBySpecialization(
             @PathVariable String specialization

@@ -5,6 +5,7 @@ import Doctors from '../pages/Doctors';
 import BookAppoinment from '../pages/BookAppoinment';
 import Dashboard from '../pages/Dashboard';
 import AdminDashboard from '../pages/AdminDashboard';
+import DoctorDashboard from '../pages/DoctorDashboard';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import MedicalFAQ from '../pages/MedicalFAQ';
@@ -25,13 +26,15 @@ export default function AppRoutes() {
   }
 
   const getHomeRedirect = () => {
-    return user?.role === 'ADMIN' ? '/admin-dashboard' : '/';
+    if (user?.role === 'ADMIN') return '/admin-dashboard';
+    if (user?.role === 'DOCTOR') return '/doctor-dashboard';
+    return '/';
   };
 
   return (
     <Routes>
       {/* Public Pages */}
-      <Route path="/" element={isAuthenticated && user?.role === 'ADMIN' ? <Navigate to="/admin-dashboard" replace /> : <Home />} />
+      <Route path="/" element={isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'DOCTOR') ? <Navigate to={getHomeRedirect()} replace /> : <Home />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to={getHomeRedirect()} replace /> : <Login />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to={getHomeRedirect()} replace /> : <Register />} />
 
@@ -43,7 +46,7 @@ export default function AppRoutes() {
         path="/dashboard" 
         element={
           isAuthenticated 
-            ? (user?.role === 'ADMIN' ? <Navigate to="/admin-dashboard" replace /> : <Dashboard />) 
+            ? (user?.role === 'ADMIN' || user?.role === 'DOCTOR' ? <Navigate to={getHomeRedirect()} replace /> : <Dashboard />) 
             : <Navigate to="/login" replace />
         } 
       />
@@ -52,6 +55,14 @@ export default function AppRoutes() {
         element={
           isAuthenticated 
             ? (user?.role === 'ADMIN' ? <AdminDashboard /> : <Navigate to="/" replace />) 
+            : <Navigate to="/login" replace />
+        } 
+      />
+      <Route 
+        path="/doctor-dashboard" 
+        element={
+          isAuthenticated 
+            ? (user?.role === 'DOCTOR' ? <DoctorDashboard /> : <Navigate to="/" replace />) 
             : <Navigate to="/login" replace />
         } 
       />

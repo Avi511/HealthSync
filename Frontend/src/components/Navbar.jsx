@@ -16,7 +16,9 @@ export default function Navbar() {
     { name: 'Book Appointment', path: '/book-appointment' },
     ...(user?.role === 'ADMIN'
       ? [{ name: 'Admin Dashboard', path: '/admin-dashboard' }]
-      : (isAuthenticated ? [{ name: 'Dashboard', path: '/dashboard' }] : [])),
+      : user?.role === 'DOCTOR'
+        ? [{ name: 'Doctor Dashboard', path: '/doctor-dashboard' }]
+        : (isAuthenticated ? [{ name: 'Dashboard', path: '/dashboard' }] : [])),
   ];
 
   const handleNavLinkClick = (e, link) => {

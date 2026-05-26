@@ -31,7 +31,7 @@ export function ToastProvider({ children }) {
       {children}
       
       {/* Floating Toasts Container */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full sm:w-auto px-4 sm:px-0">
+      <div className="fixed top-6 left-6 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full sm:w-auto px-4 sm:px-0">
         <AnimatePresence>
           {toasts.map((toast) => (
             <ToastItem

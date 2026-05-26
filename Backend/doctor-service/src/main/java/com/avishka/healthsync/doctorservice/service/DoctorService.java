@@ -13,6 +13,8 @@ public interface DoctorService {
 
     DoctorResponse getDoctorById(Long id);
 
+    DoctorResponse getDoctorByEmail(String email);
+
     List<DoctorResponse> getDoctorsBySpecialization(String specialization);
 
     DoctorResponse updateDoctor(Long id, DoctorRequest request);

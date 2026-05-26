@@ -21,7 +21,9 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const redirectPath = user.role === 'ADMIN' ? '/admin-dashboard' : '/';
+      let redirectPath = '/';
+      if (user.role === 'ADMIN') redirectPath = '/admin-dashboard';
+      if (user.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
@@ -49,7 +51,9 @@ export default function Login() {
       const userData = await login(email, password);
       setIsLoading(false);
       showSuccess(`Welcome back, ${userData?.firstName || 'User'}! Successfully signed in.`);
-      const redirectPath = userData?.role === 'ADMIN' ? '/admin-dashboard' : '/';
+      let redirectPath = '/';
+      if (userData?.role === 'ADMIN') redirectPath = '/admin-dashboard';
+      if (userData?.role === 'DOCTOR') redirectPath = '/doctor-dashboard';
       navigate(redirectPath);
     } catch (err) {
       setIsLoading(false);

@@ -14,6 +14,11 @@ export const getAllDoctors = async () => {
   return response.data;
 };
 
+export const getDoctorByEmail = async (email) => {
+  const response = await api.get(`/api/doctors/email/${email}`);
+  return response.data;
+};
+
 export const createDoctor = async (doctorData) => {
   const response = await api.post('/api/doctors', doctorData);
   return response.data;
