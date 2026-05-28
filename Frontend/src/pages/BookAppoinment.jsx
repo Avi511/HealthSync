@@ -328,7 +328,7 @@ export default function BookAppoinment() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Booking Form Card */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+          <div className="lg:col-span-2 order-2 lg:order-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Appointment Request Form</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -509,7 +509,7 @@ export default function BookAppoinment() {
           </div>
 
           {/* Doctor Detail Sidecard Column */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
             {selectedDoctor ? (
               <>
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group">

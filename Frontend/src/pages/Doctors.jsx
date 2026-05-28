@@ -99,6 +99,45 @@ export default function Doctors() {
   const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage;
   const displayedDoctors = filteredDoctors.slice(indexOfFirstDoctor, indexOfLastDoctor);
 
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, currentPage - 1);
+      let end = Math.min(totalPages, currentPage + 1);
+
+      if (currentPage <= 2) {
+        end = 3;
+      }
+      if (currentPage >= totalPages - 1) {
+        start = totalPages - 2;
+      }
+
+      if (start > 1) {
+        pages.push(1);
+        if (start > 2) {
+          pages.push('...');
+        }
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages) {
+        if (end < totalPages - 1) {
+          pages.push('...');
+        }
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50/50 pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -375,53 +414,65 @@ export default function Doctors() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 pt-4">
+              <div className="flex justify-center items-center space-x-1.5 sm:space-x-2 pt-4">
                 <button
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className={`inline-flex items-center px-4 py-2.5 border rounded-xl text-sm font-semibold transition duration-200 ${
+                  className={`inline-flex items-center justify-center h-8 sm:h-10 px-2 sm:px-4 border rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition duration-200 ${
                     currentPage === 1
                       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                       : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 cursor-pointer shadow-sm hover:shadow'
                   }`}
                 >
-                  <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="w-4 h-4 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
                 </button>
 
                 {/* Page Numbers */}
-                <div className="flex items-center space-x-1.5">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-                    <button
-                      key={pageNumber}
-                      type="button"
-                      onClick={() => setCurrentPage(pageNumber)}
-                      className={`w-10 h-10 border rounded-xl text-sm font-bold transition duration-200 ${
-                        currentPage === pageNumber
-                          ? 'bg-primary text-white border-primary scale-110 shadow-md cursor-default'
-                          : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 cursor-pointer hover:shadow-sm'
-                      }`}
-                    >
-                      {pageNumber}
-                    </button>
-                  ))}
+                <div className="flex items-center space-x-1 sm:space-x-1.5">
+                  {getPageNumbers().map((pageNumber, index) => {
+                    if (pageNumber === '...') {
+                      return (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-gray-400 text-xs sm:text-sm font-bold"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+                    return (
+                      <button
+                        key={pageNumber}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className={`w-8 h-8 sm:w-10 sm:h-10 border rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition duration-200 ${
+                          currentPage === pageNumber
+                            ? 'bg-primary text-white border-primary scale-110 shadow-md cursor-default'
+                            : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 cursor-pointer hover:shadow-sm'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className={`inline-flex items-center px-4 py-2.5 border rounded-xl text-sm font-semibold transition duration-200 ${
+                  className={`inline-flex items-center justify-center h-8 sm:h-10 px-2 sm:px-4 border rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition duration-200 ${
                     currentPage === totalPages
                       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                       : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 cursor-pointer shadow-sm hover:shadow'
                   }`}
                 >
-                  Next
-                  <svg className="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <span className="hidden sm:inline">Next</span>
+                  <svg className="w-4 h-4 sm:ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
