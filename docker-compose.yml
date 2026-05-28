@@ -1,0 +1,95 @@
+services:
+  # ==========================================
+  # FRONTEND
+  # ==========================================
+  frontend:
+    build:
+      context: ./Frontend
+    container_name: healthsync-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api-gateway
+
+  # ==========================================
+  # BACKEND SERVICES
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: healthsync-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./Backend/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./Backend/user-service
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/user_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  doctor-service:
+    build:
+      context: ./Backend/doctor-service
+    container_name: doctor-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/doctor_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  appointment-service:
+    build:
+      context: ./Backend/appointment-service
+    container_name: appointment-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appointment_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ./Backend/notification-service
+    container_name: notification-service
+    ports:
+      - "8085:8085"
+
+  api-gateway:
+    build:
+      context: ./Backend/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - USER_SERVICE_URL=http://user-service:8081
+      - DOCTOR_SERVICE_URL=http://doctor-service:8083
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:8084
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8085
+    depends_on:
+      - user-service
+      - doctor-service
+      - appointment-service
+      - notification-service
+
+volumes:
+  postgres_data:
