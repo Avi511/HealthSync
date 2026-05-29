@@ -9,11 +9,14 @@ spring:
     config:
       enabled: false
 
+  config:
+    import: optional:file:.env[.properties]
+
   mail:
     host: smtp.gmail.com
     port: 465
-    username: health.sync.26@gmail.com
-    password: qagixemjsbzblods
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
 
     properties:
       mail:

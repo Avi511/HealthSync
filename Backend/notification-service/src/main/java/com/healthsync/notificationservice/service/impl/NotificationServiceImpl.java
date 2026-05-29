@@ -3,6 +3,7 @@ package com.healthsync.notificationservice.service.impl;
 import com.healthsync.notificationservice.dto.EmailRequest;
 import com.healthsync.notificationservice.dto.NotificationResponse;
 import com.healthsync.notificationservice.service.NotificationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Service;
 public class NotificationServiceImpl implements NotificationService {
 
     private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.username}")
+    private String fromEmail;
 
     public NotificationServiceImpl(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -24,7 +28,7 @@ public class NotificationServiceImpl implements NotificationService {
             mailMessage.setTo(request.getTo());
             mailMessage.setSubject(request.getSubject());
             mailMessage.setText(request.getMessage());
-            mailMessage.setFrom("health.sync.26@gmail.com");
+            mailMessage.setFrom(fromEmail);
 
             mailSender.send(mailMessage);
             System.out.println("✅ Email sent successfully to " + request.getTo());
